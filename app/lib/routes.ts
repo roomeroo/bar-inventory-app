@@ -1,11 +1,13 @@
+
+
 export interface Route {
-  path: string
+  href: string
   label: string
-  icon?: string
+  icon: "inventory" | "clipboard" | "clock"
 }
 
 export const routes: Route[] = [ 
-    {  path: "/", label: "Inventory", icon: "inventory" },
-    {  path: "/order", label: "Order", icon: "clipboard" },
-    {  path: "/history", label: "History", icon: "clock" }
+  {  href: "/", label: "Inventory", icon: "inventory" },
+  {  href: "/order", label: "Order", icon: "clipboard" },
+  {  href: "/history", label: "History", icon: "clock" }
 ]
