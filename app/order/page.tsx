@@ -72,58 +72,60 @@ export default function OrderPage() {
     }
 
     return (
-        <main className="flex flex-col gap-6 p-5">
-            <div className="pt-3">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Order</p>
-                <h1 className="text-lg font-semibold text-gray-800 dark:text-zinc-100">Low stock items</h1>
+        <main className="flex flex-col gap-6 p-6 sm:p-8">
+            <div className="pt-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Order</p>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Low stock items</h1>
             </div>
 
             {error ? (
-                <div className="bg-red-50 dark:bg-red-950 border border-red-100 dark:border-red-900 rounded-2xl p-4 flex items-center justify-between gap-4">
-                    <p className="text-sm text-red-600 dark:text-red-300">Could not load low stock items.</p>
-                    <button onClick={() => setReloadKey((k) => k + 1)} className="text-sm font-semibold text-red-600 dark:text-red-300">
+                <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <p className="text-sm text-red-700 dark:text-red-300">Could not load low stock items.</p>
+                    <button onClick={() => setReloadKey((k) => k + 1)} className="text-sm font-semibold text-red-700 dark:text-red-300">
                         Try again
                     </button>
                 </div>
             ) : loading ? (
-                <p className="text-sm text-gray-400 dark:text-zinc-500">Loading...</p>
+                <p className="text-base text-gray-500 dark:text-zinc-400">Loading...</p>
             ) : visible.length === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-zinc-500">Nothing to order right now.</p>
+                <p className="text-base text-gray-500 dark:text-zinc-400">Nothing to order right now.</p>
             ) : (
-                <div className="flex flex-col gap-3">
-                    {visible.map((item) => (
-                        <div
-                            key={item.id}
-                            className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl p-4 flex items-center justify-between gap-4"
-                        >
-                            <div className="flex flex-col">
-                                <span className="font-semibold text-sm text-gray-800 dark:text-zinc-100">{item.name}</span>
-                                <span className="text-xs text-gray-400 dark:text-zinc-500">
-                                    {item.category ?? "Uncategorized"} · have {item.quantity} {item.unit} (min {item.min_stock})
-                                </span>
+                <div className="flex flex-col gap-4">
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        {visible.map((item) => (
+                            <div
+                                key={item.id}
+                                className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex items-center justify-between gap-4"
+                            >
+                                <div className="flex flex-col">
+                                    <span className="font-semibold text-base text-gray-900 dark:text-zinc-50">{item.name}</span>
+                                    <span className="text-sm text-gray-600 dark:text-zinc-400">
+                                        {item.category ?? "Uncategorized"} · have {item.quantity} {item.unit} (min {item.min_stock})
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        className="w-20 rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2.5 text-base text-right text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={quantities[item.id] ?? ""}
+                                        onChange={(e) => setQuantities({ ...quantities, [item.id]: e.target.value })}
+                                    />
+                                    <button
+                                        onClick={() => setRemoved(new Set(removed).add(item.id))}
+                                        className="text-sm font-medium text-gray-500 dark:text-zinc-400"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="number"
-                                    min="1"
-                                    className="w-16 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-right text-gray-800 dark:text-zinc-100"
-                                    value={quantities[item.id] ?? ""}
-                                    onChange={(e) => setQuantities({ ...quantities, [item.id]: e.target.value })}
-                                />
-                                <button
-                                    onClick={() => setRemoved(new Set(removed).add(item.id))}
-                                    className="text-xs text-gray-400 dark:text-zinc-500"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
 
                     <button
                         onClick={handleConfirm}
                         disabled={submitting}
-                        className="bg-blue-600 disabled:opacity-60 text-white font-semibold rounded-xl py-3 mt-2"
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl py-3.5 text-base mt-2"
                     >
                         {submitting ? "Placing order..." : "Confirm order"}
                     </button>

@@ -68,6 +68,17 @@ class ItemsService implements ItemsServiceI {
         return (data ?? []).map(mapArticleRow);
     }
 
+    async listUnits(userId: string): Promise<string[]> {
+        const barId = await getBarId(userId);
+        const { data, error } = await supabase
+            .from("article")
+            .select("unit")
+            .eq("bar_id", barId);
+        if (error) throw error;
+        const unique = Array.from(new Set((data ?? []).map((row) => row.unit)));
+        return unique.sort((a, b) => a.localeCompare(b));
+    }
+
     async create(userId: string, input: NewItemInput): Promise<{ item: Item | null; error: string | null }> {
         const barId = await getBarId(userId);
 

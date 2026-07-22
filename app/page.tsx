@@ -58,22 +58,22 @@ export default function Home() {
     }, [user, reloadKey]);
 
     return (
-        <main className="flex flex-col gap-6 p-5">
+        <main className="flex flex-col gap-7 p-6 sm:p-8">
             {/* Header */}
-            <div className="flex items-center gap-3 pt-3">
-                <div className="bg-blue-600 rounded-2xl p-2.5">
-                    <BiWine className="text-2xl text-white" />
+            <div className="flex items-center gap-4 pt-2">
+                <div className="bg-blue-600 rounded-2xl p-3">
+                    <BiWine className="text-3xl text-white" />
                 </div>
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Inventory</p>
-                    <p className="text-lg font-semibold text-gray-800 dark:text-zinc-100">@{user?.username}</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Inventory</p>
+                    <p className="text-xl font-semibold text-gray-900 dark:text-zinc-50">@{user?.username}</p>
                 </div>
             </div>
 
             {error && (
-                <div className="bg-red-50 dark:bg-red-950 border border-red-100 dark:border-red-900 rounded-2xl p-4 flex items-center justify-between gap-4">
-                    <p className="text-sm text-red-600 dark:text-red-300">Could not load your inventory.</p>
-                    <button onClick={() => setReloadKey((k) => k + 1)} className="text-sm font-semibold text-red-600 dark:text-red-300">
+                <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-2xl p-4 flex items-center justify-between gap-4">
+                    <p className="text-sm text-red-700 dark:text-red-300">Could not load your inventory.</p>
+                    <button onClick={() => setReloadKey((k) => k + 1)} className="text-sm font-semibold text-red-700 dark:text-red-300">
                         Try again
                     </button>
                 </div>
@@ -82,52 +82,52 @@ export default function Home() {
             {/* Iniciar inventario */}
             <Link
                 href="/inventory/count"
-                className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl p-4 flex gap-4 justify-center items-center"
+                className="bg-blue-50 dark:bg-zinc-800 border border-blue-200 dark:border-zinc-700 rounded-2xl p-5 flex gap-3 justify-center items-center hover:bg-blue-100 dark:hover:bg-zinc-700 transition-colors"
             >
-                <VscDebugStart className="text-xl text-blue-500" />
-                <p className="text-xl font-bold text-blue-500">Start inventory</p>
+                <VscDebugStart className="text-2xl text-blue-600 dark:text-blue-400" />
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">Start inventory</p>
             </Link>
 
             {/* Grid de estadisticas */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {/* Último inventario */}
-                <div className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl p-4 flex flex-col gap-2">
-                    <LuCalendarClock className="text-xl text-blue-500" />
-                    <p className="text-xs text-gray-400 dark:text-zinc-500">Last update</p>
-                    <p className="font-semibold text-sm text-gray-800 dark:text-zinc-100">
+                <div className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-2">
+                    <LuCalendarClock className="text-2xl text-blue-600 dark:text-blue-400" />
+                    <p className="text-sm text-gray-600 dark:text-zinc-400">Last update</p>
+                    <p className="font-semibold text-base text-gray-900 dark:text-zinc-50">
                         {loading ? "..." : formatDate(lastInventoryUpdate)}
                     </p>
                 </div>
 
                 {/* Artículos totales */}
-                <div className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl p-4 flex flex-col gap-2">
-                    <CiBoxes className="text-xl text-blue-500" />
-                    <p className="text-xs text-gray-400 dark:text-zinc-500">Total articles</p>
-                    <p className="font-semibold text-sm text-gray-800 dark:text-zinc-100">
+                <div className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-2">
+                    <CiBoxes className="text-2xl text-blue-600 dark:text-blue-400" />
+                    <p className="text-sm text-gray-600 dark:text-zinc-400">Total articles</p>
+                    <p className="font-semibold text-base text-gray-900 dark:text-zinc-50">
                         {loading ? "..." : totalArticles}
                     </p>
                 </div>
 
                 {/* Pedidos pendientes */}
-                <div className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl p-4 flex flex-col gap-2">
-                    <CiBoxes className="text-xl text-orange-400" />
-                    <p className="text-xs text-gray-400 dark:text-zinc-500">Pending articles</p>
-                    <p className="font-semibold text-sm text-gray-800 dark:text-zinc-100">
+                <div className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-2">
+                    <CiBoxes className="text-2xl text-orange-600 dark:text-orange-400" />
+                    <p className="text-sm text-gray-600 dark:text-zinc-400">Pending articles</p>
+                    <p className="font-semibold text-base text-gray-900 dark:text-zinc-50">
                         {loading ? "..." : pendingArticles}
                     </p>
                 </div>
 
                 {/* Último pedido */}
-                <div className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl p-4 flex flex-col gap-2">
-                    <CiBookmarkCheck className="text-xl text-green-500" />
-                    <p className="text-xs text-gray-400 dark:text-zinc-500">Last order</p>
-                    <p className="font-semibold text-sm text-gray-800 dark:text-zinc-100">
+                <div className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-2">
+                    <CiBookmarkCheck className="text-2xl text-green-600 dark:text-green-400" />
+                    <p className="text-sm text-gray-600 dark:text-zinc-400">Last order</p>
+                    <p className="font-semibold text-base text-gray-900 dark:text-zinc-50">
                         {loading ? "..." : formatDate(lastOrderDate)}
                     </p>
                 </div>
             </div>
 
-            <Link href="/inventory/articles" className="flex items-center justify-center gap-2 text-blue-500 font-semibold py-2">
+            <Link href="/inventory/articles" className="flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 font-semibold py-3 text-base">
                 <IoListOutline className="text-xl" />
                 Manage items
             </Link>

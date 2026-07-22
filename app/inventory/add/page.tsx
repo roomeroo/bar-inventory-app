@@ -1,11 +1,15 @@
 'use client'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { IoArrowBack } from "react-icons/io5";
 import { useAuth } from "../../lib/services/auth/auth-context";
 import { itemsService } from "../../lib/services/items/items.service";
+import ComboBox from "../../components/ComboBox";
+
+const inputClass = "rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-3 text-base text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500";
+const labelClass = "flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-zinc-300";
 
 export default function AddItemPage() {
     const { user } = useAuth();
@@ -16,6 +20,12 @@ export default function AddItemPage() {
     const [quantity, setQuantity] = useState("0");
     const [minStock, setMinStock] = useState("0");
     const [submitting, setSubmitting] = useState(false);
+    const [units, setUnits] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (!user) return;
+        itemsService.listUnits(user.id).then(setUnits).catch(() => {});
+    }, [user]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -44,19 +54,19 @@ export default function AddItemPage() {
     }
 
     return (
-        <main className="flex flex-col gap-6 p-5">
-            <div className="flex items-center gap-3 pt-3">
-                <Link href="/" className="text-gray-400 dark:text-zinc-500">
+        <main className="flex flex-col gap-6 p-6 sm:p-8 max-w-lg mx-auto">
+            <div className="flex items-center gap-3 pt-2">
+                <Link href="/" className="text-gray-500 dark:text-zinc-400">
                     <IoArrowBack className="text-xl" />
                 </Link>
-                <h1 className="text-lg font-semibold text-gray-800 dark:text-zinc-100">Add item</h1>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Add item</h1>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <label className="flex flex-col gap-1 text-sm text-gray-500 dark:text-zinc-400">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                <label className={labelClass}>
                     Name
                     <input
-                        className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-3 text-gray-800 dark:text-zinc-100"
+                        className={inputClass}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Blue Gin"
@@ -64,10 +74,10 @@ export default function AddItemPage() {
                     />
                 </label>
 
-                <label className="flex flex-col gap-1 text-sm text-gray-500 dark:text-zinc-400">
+                <label className={labelClass}>
                     Category
                     <input
-                        className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-3 text-gray-800 dark:text-zinc-100"
+                        className={inputClass}
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
                         placeholder="Spirits"
@@ -75,19 +85,20 @@ export default function AddItemPage() {
                 </label>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <label className="flex flex-col gap-1 text-sm text-gray-500 dark:text-zinc-400">
+                    <label className={labelClass}>
                         Unit
-                        <input
-                            className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-3 text-gray-800 dark:text-zinc-100"
+                        <ComboBox
+                            className={inputClass}
                             value={unit}
-                            onChange={(e) => setUnit(e.target.value)}
+                            onChange={setUnit}
+                            options={units}
                             placeholder="bottle"
                         />
                     </label>
-                    <label className="flex flex-col gap-1 text-sm text-gray-500 dark:text-zinc-400">
+                    <label className={labelClass}>
                         Current quantity
                         <input
-                            className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-3 text-gray-800 dark:text-zinc-100"
+                            className={inputClass}
                             type="number"
                             min="0"
                             value={quantity}
@@ -96,10 +107,10 @@ export default function AddItemPage() {
                     </label>
                 </div>
 
-                <label className="flex flex-col gap-1 text-sm text-gray-500 dark:text-zinc-400">
+                <label className={labelClass}>
                     Minimum stock (flag as low at or below this)
                     <input
-                        className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-3 text-gray-800 dark:text-zinc-100"
+                        className={inputClass}
                         type="number"
                         min="0"
                         value={minStock}
@@ -110,7 +121,7 @@ export default function AddItemPage() {
                 <button
                     type="submit"
                     disabled={submitting}
-                    className="bg-blue-600 disabled:opacity-60 text-white font-semibold rounded-xl py-3"
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl py-3.5 text-base mt-2"
                 >
                     {submitting ? "Saving..." : "Save item"}
                 </button>

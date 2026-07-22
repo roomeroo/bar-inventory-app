@@ -47,19 +47,19 @@ export default function AuthForm({ mode }: AuthFormProps) {
     const isSignup = mode === "signup";
 
     return (
-        <main className="flex flex-col gap-6 p-5 pt-16">
-            <div className="flex flex-col gap-1 items-center">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Bar Inventory</p>
-                <h1 className="text-xl font-semibold text-gray-800 dark:text-zinc-100">
+        <main className="flex flex-col gap-8 p-6 sm:p-10 pt-16 max-w-sm sm:max-w-md mx-auto">
+            <div className="flex flex-col gap-2 items-center">
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Bar Inventory</p>
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-zinc-50">
                     {isSignup ? "Create account" : "Sign in"}
                 </h1>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <label className="flex flex-col gap-1 text-sm text-gray-500 dark:text-zinc-400">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-zinc-300">
                     Username
                     <input
-                        className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-3 text-gray-800 dark:text-zinc-100"
+                        className="rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-3 text-base text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         autoCapitalize="off"
@@ -68,10 +68,10 @@ export default function AuthForm({ mode }: AuthFormProps) {
                         required
                     />
                 </label>
-                <label className="flex flex-col gap-1 text-sm text-gray-500 dark:text-zinc-400">
+                <label className="flex flex-col gap-1.5 text-sm font-medium text-gray-700 dark:text-zinc-300">
                     Password
                     <input
-                        className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-4 py-3 text-gray-800 dark:text-zinc-100"
+                        className="rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-4 py-3 text-base text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -83,17 +83,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 <button
                     type="submit"
                     disabled={submitting}
-                    className="bg-blue-600 disabled:opacity-60 text-white font-semibold rounded-xl py-3"
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl py-3.5 text-base mt-2"
                 >
                     {submitting ? "Please wait..." : isSignup ? "Sign up" : "Sign in"}
                 </button>
             </form>
 
-            <p className="text-center text-sm text-gray-400 dark:text-zinc-500">
+            <p className="text-center text-sm text-gray-600 dark:text-zinc-400">
                 {isSignup ? (
-                    <>Already have an account? <Link href="/login" className="text-blue-500 font-semibold">Sign in</Link></>
+                    <>Already have an account? <Link href="/login" className="text-blue-600 dark:text-blue-400 font-semibold">Sign in</Link></>
                 ) : (
-                    <>Don&apos;t have an account? <Link href="/signup" className="text-blue-500 font-semibold">Sign up</Link></>
+                    <>Don&apos;t have an account? <Link href="/signup" className="text-blue-600 dark:text-blue-400 font-semibold">Sign up</Link></>
                 )}
             </p>
         </main>

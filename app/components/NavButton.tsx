@@ -21,10 +21,10 @@ export default function NavButton({ route }: NavButtonProps ) {
     const Icon = iconMap[route.icon]
     
     return (
-      <Link href={route.href} className="relative flex flex-col items-center w-full py-3 gap-0.5 text-xs transition-colors">
-        {isActive && <span className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-blue-500 rounded-full" />}
-        <Icon className={isActive ? "text-blue-500 text-2xl" : "text-gray-400 dark:text-zinc-500 text-2xl"} />
-        <span className={isActive ? "text-blue-500 font-semibold" : "text-gray-400 dark:text-zinc-500"}>{ route.label }</span>
+      <Link href={route.href} className="relative flex flex-col items-center w-full py-4 gap-1 text-sm transition-colors">
+        {isActive && <span className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />}
+        <Icon className={isActive ? "text-blue-600 dark:text-blue-400 text-2xl" : "text-gray-500 dark:text-zinc-400 text-2xl"} />
+        <span className={isActive ? "text-blue-600 dark:text-blue-400 font-semibold" : "text-gray-500 dark:text-zinc-400"}>{ route.label }</span>
       </Link>
     )
 }

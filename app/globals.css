@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/* Dark mode is driven by a `.dark` class on <html> (see theme-context.tsx),
+   not just the OS media query, so a manual toggle can override the system
+   preference and persist it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 body {
