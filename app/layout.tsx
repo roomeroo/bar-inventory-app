@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { routes } from "./lib/routes";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
-import BottomNav from "./components/NavButton";
+import AppShell from "./components/AppShell";
 
 
 const geistSans = Geist({
@@ -33,20 +32,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="bg-zinc-100 dark:bg-zinc-950">
-        <div className="max-w-md mx-auto min-h-screen bg-white dark:bg-zinc-900 shadow-md flex flex-col">
-          <div className="flex-1 pb-20">
-            {children}
-          </div>
-          <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-t border-gray-100 dark:border-zinc-800">
-            <ul className="flex">
-              {routes.map((route) => (
-                <li key={route.href} className="flex-1">
-                  <BottomNav route={route} />
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
+        <AppShell>{children}</AppShell>
         <Toaster position="top-center" />
       </body>
     </html>

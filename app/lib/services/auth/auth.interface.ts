@@ -1,20 +1,20 @@
-// Tipo que devuelven signIn y signUp
-type AuthResult = {
-  user: { id: string; email: string } | null
+// Tipo que devuelven signup y signin
+export type AuthResult = {
+  user: { id: string; username: string } | null
   error: string | null
 }
 
 // Tipo que devuelve getSession
-type SessionResult = {
-  user: { id: string; email: string } | null
+export type SessionResult = {
+  user: { id: string; username: string } | null
 }
 
-interface AuthServiceI {
-    signup(email: string, password: string): Promise<AuthResult>;
-    signin(email: string, password: string): Promise<AuthResult>;
+export interface AuthServiceI {
+    signup(username: string, password: string): Promise<AuthResult>;
+    signin(username: string, password: string): Promise<AuthResult>;
     signout(): Promise<{error: string | null}>;
     getSession(): Promise<SessionResult>;
     onAuthStateChange(
-        callback: (user: { id: string; email: string } | null) => void
+        callback: (user: { id: string; username: string } | null) => void
     ): () => void
 }
