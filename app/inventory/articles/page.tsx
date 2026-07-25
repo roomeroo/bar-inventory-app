@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { IoArrowBack, IoAddCircleOutline } from "react-icons/io5";
+import { IoArrowBack, IoAddCircleOutline, IoChevronUp, IoChevronDown } from "react-icons/io5";
 import { useAuth } from "../../lib/services/auth/auth-context";
 import { itemsService } from "../../lib/services/items/items.service";
 import { isLow } from "../../lib/services/items/low-stock";
@@ -66,6 +66,10 @@ export default function ArticlesPage() {
         () => Array.from(new Set(items.map((i) => i.unit))).sort((a, b) => a.localeCompare(b)),
         [items]
     );
+    const categories = useMemo(
+        () => Array.from(new Set(items.map((i) => i.category).filter((c): c is string => Boolean(c)))).sort((a, b) => a.localeCompare(b)),
+        [items]
+    );
 
     function startEdit(item: Item) {
         setEditingId(item.id);
@@ -115,6 +119,21 @@ export default function ArticlesPage() {
         setItems((current) => current.filter((i) => i.id !== item.id));
     }
 
+    async function moveItem(index: number, direction: -1 | 1) {
+        const target = index + direction;
+        if (target < 0 || target >= items.length) return;
+
+        const reordered = [...items];
+        [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
+        setItems(reordered);
+
+        const { error } = await itemsService.reorder(reordered.map((i) => i.id));
+        if (error) {
+            toast.error(error);
+            setReloadKey((k) => k + 1);
+        }
+    }
+
     return (
         <main className="flex flex-col gap-6 p-6 sm:p-8">
             <div className="flex items-center justify-between gap-3 pt-2">
@@ -144,8 +163,9 @@ export default function ArticlesPage() {
                     No items yet. <Link href="/inventory/add" className="text-blue-600 dark:text-blue-400 font-semibold">Add one</Link>.
                 </p>
             ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
-                    {items.map((item) => {
+                <div className="flex flex-col gap-3">
+                    <p className="text-sm text-gray-500 dark:text-zinc-400">Use the arrows to arrange items in the order you want to count them.</p>
+                    {items.map((item, index) => {
                         const isEditing = editingId === item.id;
                         return (
                             <div
@@ -161,10 +181,11 @@ export default function ArticlesPage() {
                                                 onChange={(e) => setEdit({ ...edit, name: e.target.value })}
                                                 placeholder="Name"
                                             />
-                                            <input
+                                            <ComboBox
                                                 className={editInputClass}
                                                 value={edit.category}
-                                                onChange={(e) => setEdit({ ...edit, category: e.target.value })}
+                                                onChange={(value) => setEdit({ ...edit, category: value })}
+                                                options={categories}
                                                 placeholder="Category"
                                             />
                                             <ComboBox
@@ -210,6 +231,24 @@ export default function ArticlesPage() {
                                 ) : (
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex flex-col">
+                                            <button
+                                                onClick={() => moveItem(index, -1)}
+                                                disabled={index === 0}
+                                                aria-label="Move up"
+                                                className="text-gray-400 dark:text-zinc-500 disabled:opacity-30"
+                                            >
+                                                <IoChevronUp className="text-lg" />
+                                            </button>
+                                            <button
+                                                onClick={() => moveItem(index, 1)}
+                                                disabled={index === items.length - 1}
+                                                aria-label="Move down"
+                                                className="text-gray-400 dark:text-zinc-500 disabled:opacity-30"
+                                            >
+                                                <IoChevronDown className="text-lg" />
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-col flex-1">
                                             <span className="font-semibold text-base text-gray-900 dark:text-zinc-50">
                                                 {item.name}
                                                 {isLow(item) && (

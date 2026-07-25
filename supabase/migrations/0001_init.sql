@@ -117,6 +117,10 @@ create table public.article (
   quantity numeric not null default 0,
   expected_quantity numeric,
   pending_order_amount numeric,
+  -- User-controlled display order (lower = earlier), independent of name.
+  -- Lets a bar arrange its catalog to match physical shelf/count order.
+  -- New articles append to the end (see items.service.ts's create()).
+  sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -124,6 +128,7 @@ create table public.article (
 create unique index article_bar_id_name_key on public.article(bar_id, name);
 create index article_bar_id_idx on public.article(bar_id);
 create index article_category_id_idx on public.article(category_id);
+create index article_bar_id_sort_order_idx on public.article(bar_id, sort_order);
 
 alter table public.article enable row level security;
 

@@ -21,10 +21,12 @@ export default function AddItemPage() {
     const [minStock, setMinStock] = useState("0");
     const [submitting, setSubmitting] = useState(false);
     const [units, setUnits] = useState<string[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
 
     useEffect(() => {
         if (!user) return;
         itemsService.listUnits(user.id).then(setUnits).catch(() => {});
+        itemsService.listCategories(user.id).then(setCategories).catch(() => {});
     }, [user]);
 
     async function handleSubmit(e: React.FormEvent) {
@@ -76,10 +78,11 @@ export default function AddItemPage() {
 
                 <label className={labelClass}>
                     Category
-                    <input
+                    <ComboBox
                         className={inputClass}
                         value={category}
-                        onChange={(e) => setCategory(e.target.value)}
+                        onChange={setCategory}
+                        options={categories}
                         placeholder="Spirits"
                     />
                 </label>

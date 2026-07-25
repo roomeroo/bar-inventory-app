@@ -63,6 +63,7 @@ class ItemsService implements ItemsServiceI {
             .from("article")
             .select("*, category:category_id(name)")
             .eq("bar_id", barId)
+            .order("sort_order", { ascending: true })
             .order("name", { ascending: true });
         if (error) throw error;
         return (data ?? []).map(mapArticleRow);
@@ -79,6 +80,25 @@ class ItemsService implements ItemsServiceI {
         return unique.sort((a, b) => a.localeCompare(b));
     }
 
+    async listCategories(userId: string): Promise<string[]> {
+        const barId = await getBarId(userId);
+        const { data, error } = await supabase
+            .from("category")
+            .select("name")
+            .eq("bar_id", barId)
+            .order("name", { ascending: true });
+        if (error) throw error;
+        return (data ?? []).map((row) => row.name);
+    }
+
+    async reorder(orderedIds: string[]): Promise<{ error: string | null }> {
+        const results = await Promise.all(
+            orderedIds.map((id, index) => supabase.from("article").update({ sort_order: index }).eq("id", id))
+        );
+        const failed = results.find((r) => r.error);
+        return { error: failed?.error ? toFriendlyMessage(failed.error, failed.error.message) : null };
+    }
+
     async create(userId: string, input: NewItemInput): Promise<{ item: Item | null; error: string | null }> {
         const barId = await getBarId(userId);
 
@@ -90,6 +110,17 @@ class ItemsService implements ItemsServiceI {
             return { item: null, error: toFriendlyMessage({ message }, "Could not resolve category.") };
         }
 
+        // New items append to the end of the bar's custom order rather
+        // than defaulting to 0, which would otherwise jump them to the front.
+        const { data: lastRow } = await supabase
+            .from("article")
+            .select("sort_order")
+            .eq("bar_id", barId)
+            .order("sort_order", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        const nextOrder = (lastRow?.sort_order ?? -1) + 1;
+
         const { data, error } = await supabase
             .from("article")
             .insert({
@@ -99,6 +130,7 @@ class ItemsService implements ItemsServiceI {
                 unit: input.unit,
                 min_stock: input.min_stock,
                 quantity: input.quantity,
+                sort_order: nextOrder,
             })
             .select("*, category:category_id(name)")
             .single();

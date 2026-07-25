@@ -64,7 +64,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
                         onChange={(e) => setUsername(e.target.value)}
                         autoCapitalize="off"
                         autoCorrect="off"
-                        placeholder="bar_ivan"
+                        placeholder="username"
                         required
                     />
                 </label>
