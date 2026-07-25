@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, CSSProperties } from "react";
 
 // Hand-rolled drag-to-reorder for a vertical list — no extra dependency.
@@ -17,6 +17,7 @@ export function useDragReorder<T extends { id: string }>(
     const [dragOffsetY, setDragOffsetY] = useState(0);
     const dragStartYRef = useRef(0);
     const dragStartTopRef = useRef(0);
+    const lastClientYRef = useRef(0);
 
     function setItemRef(id: string) {
         return (el: HTMLElement | null) => { itemRefs.current[id] = el; };
@@ -27,12 +28,14 @@ export function useDragReorder<T extends { id: string }>(
         if (!el) return;
         setDraggedId(id);
         dragStartYRef.current = e.clientY;
+        lastClientYRef.current = e.clientY;
         dragStartTopRef.current = el.getBoundingClientRect().top;
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     }
 
     function onPointerMove(e: ReactPointerEvent) {
         if (!draggedId) return;
+        lastClientYRef.current = e.clientY;
         const dy = e.clientY - dragStartYRef.current;
         setDragOffsetY(dy);
 
@@ -58,11 +61,25 @@ export function useDragReorder<T extends { id: string }>(
             const [moved] = reordered.splice(draggedIdx, 1);
             reordered.splice(targetIdx, 0, moved);
             setItems(reordered);
-            dragStartTopRef.current = itemRefs.current[draggedId]?.getBoundingClientRect().top ?? dragStartTopRef.current;
-            dragStartYRef.current = e.clientY;
-            setDragOffsetY(0);
+            // Don't recalibrate here — the DOM still reflects the
+            // pre-reorder layout (React hasn't committed yet), so reading
+            // getBoundingClientRect() now would capture a stale position
+            // and the drag baseline would drift out of sync with the
+            // pointer on every swap. The layout effect below does the
+            // recalibration once the reordered DOM has actually landed.
         }
     }
+
+    // Runs after the DOM commits the reordered list, once the dragged
+    // element's rect reflects where it actually landed.
+    useLayoutEffect(() => {
+        if (!draggedId) return;
+        const el = itemRefs.current[draggedId];
+        if (!el) return;
+        dragStartTopRef.current = el.getBoundingClientRect().top;
+        dragStartYRef.current = lastClientYRef.current;
+        setDragOffsetY(0);
+    }, [items, draggedId]);
 
     function onPointerUp() {
         if (!draggedId) return;
