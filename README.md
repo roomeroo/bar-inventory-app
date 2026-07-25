@@ -51,17 +51,17 @@ The whole app is a **static export** (`output: "export"` in `next.config.ts`) �
 
 ### Vercel (simplest)
 
-Import the repo at [vercel.com/new](https://vercel.com/new), set the same two environment variables from step 3, and deploy. Every push redeploys automatically.
+Import the repo at [vercel.com/new](https://vercel.com/new), set the same two environment variables from step 3, and deploy. Every push redeploys automatically. Optionally also set `NEXT_PUBLIC_SITE_URL` to your Vercel domain (e.g. `https://your-app.vercel.app`) so shared links show a proper preview image instead of a broken one — see the note in `.env.example`.
 
 ### GitHub Pages
 
 Already wired up via [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml):
 
 1. In your repo: **Settings → Pages → Source → GitHub Actions**.
-2. **Settings → Secrets and variables → Actions**, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as repository secrets (same values as `.env.local`).
+2. **Settings → Secrets and variables → Actions**, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as repository secrets (same values as `.env.local`). `NEXT_PUBLIC_SITE_URL` is computed automatically from your username — nothing to add for that one.
 3. Push to `develop` (or run the workflow manually from the Actions tab) — it builds and publishes to `https://<your-username>.github.io/bar-inventory-app/`.
 
-If you fork/rename the repo, update `repoBasePath` in `next.config.ts` to match your repo name — GitHub Pages serves project sites under `/<repo-name>/`, so this has to line up exactly.
+If you fork/rename the repo, update `basePath` in [`app/lib/base-path.ts`](app/lib/base-path.ts) to match your repo name — GitHub Pages serves project sites under `/<repo-name>/`, so this has to line up exactly.
 
 ### Netlify / Cloudflare Pages
 

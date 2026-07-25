@@ -49,6 +49,10 @@ The app is a mobile-style bar inventory tracker with a fixed bottom navigation b
 
 **Schema** — `supabase/migrations/0001_init.sql` is the source of truth for tables and RLS policies; it's also what the README tells new deployers to paste into their own Supabase SQL Editor.
 
+**Base path** — `app/lib/base-path.ts` exports the single `basePath` constant (`/bar-inventory-app` under `GITHUB_PAGES=true`, else `""`), imported by both `next.config.ts` and `app/manifest.ts`. Keep using it rather than re-deriving the GitHub Pages prefix elsewhere.
+
+**Icons & link previews** — `app/icon0.png`/`icon1.png`/`apple-icon.png`/`favicon.ico` (favicon/home-screen icons), `app/opengraph-image.png`/`twitter-image.png` (social share preview), and `public/icon-192.png`/`icon-512.png` (PWA manifest icons, referenced from `app/manifest.ts`) were all generated from one source logo — see `metadata` in `app/layout.tsx` for the title/description/OG/Twitter tags. `metadataBase` comes from `NEXT_PUBLIC_SITE_URL`, which must be the bare origin (no path) — Next.js already appends `basePath` itself, so including it in the env var too would double it up. `app/manifest.ts` needs `export const dynamic = "force-static"` to work under `output: "export"`.
+
 **NavButton** — `app/components/NavButton.tsx` is a `'use client'` component. It uses `usePathname()` to highlight the active route. The icon set is constrained to `"inventory" | "order" | "history"` (mapped to react-icons) — extend the union and `iconMap` together when adding new nav items.
 
 **Styling** — Tailwind v4 via PostCSS (`postcss.config.mjs`). No `tailwind.config.*` file; v4 uses CSS-first configuration.

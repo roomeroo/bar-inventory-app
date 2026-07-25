@@ -32,6 +32,9 @@ jobs:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # Origin only — no repo path. Next.js adds the /basePath itself
+          # (see next.config.ts); including it here too would double it up.
+          NEXT_PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io
 
       - uses: actions/upload-pages-artifact@v3
         with:
