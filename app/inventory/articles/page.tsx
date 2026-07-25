@@ -2,10 +2,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { IoArrowBack, IoAddCircleOutline, IoChevronUp, IoChevronDown } from "react-icons/io5";
+import { IoArrowBack, IoAddCircleOutline, IoReorderThree } from "react-icons/io5";
 import { useAuth } from "../../lib/services/auth/auth-context";
 import { itemsService } from "../../lib/services/items/items.service";
 import { isLow } from "../../lib/services/items/low-stock";
+import { useDragReorder } from "../../lib/hooks/useDragReorder";
 import ComboBox from "../../components/ComboBox";
 import type { Item } from "../../lib/services/items/items.interface";
 
@@ -71,6 +72,19 @@ export default function ArticlesPage() {
         [items]
     );
 
+    const { setItemRef, onPointerDown, onPointerMove, onPointerUp, dragStyle, draggedId } = useDragReorder(
+        items,
+        setItems,
+        (orderedIds) => {
+            itemsService.reorder(orderedIds).then(({ error }) => {
+                if (error) {
+                    toast.error(error);
+                    setReloadKey((k) => k + 1);
+                }
+            });
+        }
+    );
+
     function startEdit(item: Item) {
         setEditingId(item.id);
         setEdit(toEditState(item));
@@ -119,21 +133,6 @@ export default function ArticlesPage() {
         setItems((current) => current.filter((i) => i.id !== item.id));
     }
 
-    async function moveItem(index: number, direction: -1 | 1) {
-        const target = index + direction;
-        if (target < 0 || target >= items.length) return;
-
-        const reordered = [...items];
-        [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
-        setItems(reordered);
-
-        const { error } = await itemsService.reorder(reordered.map((i) => i.id));
-        if (error) {
-            toast.error(error);
-            setReloadKey((k) => k + 1);
-        }
-    }
-
     return (
         <main className="flex flex-col gap-6 p-6 sm:p-8">
             <div className="flex items-center justify-between gap-3 pt-2">
@@ -164,12 +163,14 @@ export default function ArticlesPage() {
                 </p>
             ) : (
                 <div className="flex flex-col gap-3">
-                    <p className="text-sm text-gray-500 dark:text-zinc-400">Use the arrows to arrange items in the order you want to count them.</p>
-                    {items.map((item, index) => {
+                    <p className="text-sm text-gray-500 dark:text-zinc-400">Drag the handle to arrange items in the order you want to count them.</p>
+                    {items.map((item) => {
                         const isEditing = editingId === item.id;
                         return (
                             <div
                                 key={item.id}
+                                ref={setItemRef(item.id)}
+                                style={dragStyle(item.id)}
                                 className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-3"
                             >
                                 {isEditing && edit ? (
@@ -230,24 +231,17 @@ export default function ArticlesPage() {
                                     </>
                                 ) : (
                                     <div className="flex items-center justify-between gap-4">
-                                        <div className="flex flex-col">
-                                            <button
-                                                onClick={() => moveItem(index, -1)}
-                                                disabled={index === 0}
-                                                aria-label="Move up"
-                                                className="text-gray-400 dark:text-zinc-500 disabled:opacity-30"
-                                            >
-                                                <IoChevronUp className="text-lg" />
-                                            </button>
-                                            <button
-                                                onClick={() => moveItem(index, 1)}
-                                                disabled={index === items.length - 1}
-                                                aria-label="Move down"
-                                                className="text-gray-400 dark:text-zinc-500 disabled:opacity-30"
-                                            >
-                                                <IoChevronDown className="text-lg" />
-                                            </button>
-                                        </div>
+                                        <button
+                                            onPointerDown={(e) => onPointerDown(e, item.id)}
+                                            onPointerMove={onPointerMove}
+                                            onPointerUp={onPointerUp}
+                                            onPointerCancel={onPointerUp}
+                                            aria-label="Drag to reorder"
+                                            style={{ touchAction: "none", cursor: draggedId === item.id ? "grabbing" : "grab" }}
+                                            className="text-gray-400 dark:text-zinc-500 p-2 -m-2"
+                                        >
+                                            <IoReorderThree className="text-xl" />
+                                        </button>
                                         <div className="flex flex-col flex-1">
                                             <span className="font-semibold text-base text-gray-900 dark:text-zinc-50">
                                                 {item.name}

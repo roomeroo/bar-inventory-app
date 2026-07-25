@@ -1,7 +1,7 @@
 import { supabase } from "../../supabase";
 import { getBarId } from "../bar/bar.service";
 import { itemsService } from "../items/items.service";
-import type { OrderLine, OrdersServiceI } from "./orders.interface";
+import type { Order, OrderItemRecord, OrderLine, OrdersServiceI } from "./orders.interface";
 
 class OrdersService implements OrdersServiceI {
     async getLastOrderDate(userId: string): Promise<string | null> {
@@ -14,6 +14,33 @@ class OrdersService implements OrdersServiceI {
             .limit(1);
         if (error) throw error;
         return data?.[0]?.created_at ?? null;
+    }
+
+    async listOrders(userId: string): Promise<Order[]> {
+        const barId = await getBarId(userId);
+        const { data, error } = await supabase
+            .from("orders")
+            .select("id, created_at")
+            .eq("bar_id", barId)
+            .order("created_at", { ascending: false });
+        if (error) throw error;
+        return data ?? [];
+    }
+
+    async listOrderItems(userId: string): Promise<OrderItemRecord[]> {
+        const barId = await getBarId(userId);
+        const { data, error } = await supabase
+            .from("order_items")
+            .select("id, order_id, article_name, quantity, unit, orders!inner(bar_id)")
+            .eq("orders.bar_id", barId);
+        if (error) throw error;
+        return (data ?? []).map((row) => ({
+            id: row.id,
+            order_id: row.order_id,
+            item_name: row.article_name,
+            quantity: row.quantity,
+            unit: row.unit,
+        }));
     }
 
     async confirmOrder(userId: string, lines: OrderLine[]): Promise<{ error: string | null }> {

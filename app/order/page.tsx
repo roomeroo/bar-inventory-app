@@ -5,6 +5,7 @@ import { useAuth } from "../lib/services/auth/auth-context";
 import { itemsService } from "../lib/services/items/items.service";
 import { isLow } from "../lib/services/items/low-stock";
 import { ordersService } from "../lib/services/orders/orders.service";
+import { downloadShoppingList, type ShoppingListLine } from "../lib/download-shopping-list";
 import type { Item } from "../lib/services/items/items.interface";
 
 export default function OrderPage() {
@@ -16,6 +17,7 @@ export default function OrderPage() {
     const [error, setError] = useState(false);
     const [reloadKey, setReloadKey] = useState(0);
     const [submitting, setSubmitting] = useState(false);
+    const [confirmedOrder, setConfirmedOrder] = useState<{ date: Date; lines: ShoppingListLine[] } | null>(null);
 
     useEffect(() => {
         if (!user) return;
@@ -67,8 +69,45 @@ export default function OrderPage() {
             toast.error(error);
             return;
         }
-        toast.success("Order placed");
+        toast.success("Order saved to history");
+        setConfirmedOrder({
+            date: new Date(),
+            lines: lines.map(({ item, quantity }) => ({ name: item.name, quantity, unit: item.unit })),
+        });
         setCandidates([]);
+    }
+
+    if (confirmedOrder) {
+        return (
+            <main className="flex flex-col gap-6 p-6 sm:p-8">
+                <div className="pt-2">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Order</p>
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Order placed</h1>
+                </div>
+                <div className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-2">
+                    {confirmedOrder.lines.map((line) => (
+                        <p key={line.name} className="text-sm text-gray-700 dark:text-zinc-300">
+                            <span className="font-medium">{line.name}</span>: {line.quantity} {line.unit}
+                        </p>
+                    ))}
+                </div>
+                <button
+                    onClick={() => downloadShoppingList(confirmedOrder.date, confirmedOrder.lines)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3.5 text-base"
+                >
+                    Download shopping list (.txt)
+                </button>
+                <p className="text-xs text-center text-gray-500 dark:text-zinc-400">
+                    You can also re-download it later from History → Orders.
+                </p>
+                <button
+                    onClick={() => { setConfirmedOrder(null); setReloadKey((k) => k + 1); }}
+                    className="text-sm font-semibold text-blue-600 dark:text-blue-400 self-center"
+                >
+                    Back to order list
+                </button>
+            </main>
+        );
     }
 
     return (
