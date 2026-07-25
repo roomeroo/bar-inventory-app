@@ -24,9 +24,15 @@ export interface CountEntry {
     quantity: number
 }
 
+export interface MinStockSuggestion {
+    suggested: number
+    cycles: number
+}
+
 export interface InventoryServiceI {
     getLastSnapshotDate(userId: string): Promise<string | null>
     listSnapshots(userId: string): Promise<InventorySnapshot[]>
     listSnapshotItems(userId: string): Promise<InventorySnapshotItem[]>
     saveCount(userId: string, entries: CountEntry[]): Promise<{ error: string | null }>
+    getMinStockSuggestions(userId: string): Promise<Record<string, MinStockSuggestion>>
 }

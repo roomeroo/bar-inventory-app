@@ -7,7 +7,14 @@ import type {
     InventorySnapshot,
     InventorySnapshotItem,
     InventoryServiceI,
+    MinStockSuggestion,
 } from "./inventory.interface";
+
+// How many of the most recent counting cycles feed the consumption trend
+// used to suggest a min_stock value. Kept small so a single unusual week
+// (e.g. a party) doesn't dominate, but wide enough to smooth out noise.
+const TREND_CYCLES = 4;
+const MIN_CYCLES_FOR_SUGGESTION = 2;
 
 interface InventoryItemRow {
     id: number;
@@ -75,6 +82,39 @@ class InventoryService implements InventoryServiceI {
             .eq("inventory_session.bar_id", barId);
         if (error) throw error;
         return (data ?? []).map(mapInventoryItemRow);
+    }
+
+    // Consumption per counted cycle = what we had + what we received minus
+    // what we counted this time. This never changes min_stock itself — it
+    // only surfaces a suggestion the user can choose to apply by hand, so a
+    // one-off spike (a party) shows up as a visible number rather than
+    // silently overriding what they set.
+    async getMinStockSuggestions(userId: string): Promise<Record<string, MinStockSuggestion>> {
+        const barId = await getBarId(userId);
+        const { data, error } = await supabase
+            .from("inventory_item")
+            .select("article_id, last_quantity, order_quantity, current_quantity, inventory_session!inner(bar_id, created_at)")
+            .eq("inventory_session.bar_id", barId)
+            .order("created_at", { referencedTable: "inventory_session", ascending: false });
+        if (error) throw error;
+
+        const cyclesByItem = new Map<string, number[]>();
+        for (const row of data ?? []) {
+            if (!row.article_id) continue;
+            const cycles = cyclesByItem.get(row.article_id) ?? [];
+            if (cycles.length >= TREND_CYCLES) continue;
+            const consumption = row.last_quantity + row.order_quantity - row.current_quantity;
+            cycles.push(Math.max(consumption, 0));
+            cyclesByItem.set(row.article_id, cycles);
+        }
+
+        const suggestions: Record<string, MinStockSuggestion> = {};
+        for (const [itemId, cycles] of cyclesByItem) {
+            if (cycles.length < MIN_CYCLES_FOR_SUGGESTION) continue;
+            const average = cycles.reduce((sum, c) => sum + c, 0) / cycles.length;
+            suggestions[itemId] = { suggested: Math.round(average), cycles: cycles.length };
+        }
+        return suggestions;
     }
 
     async saveCount(userId: string, entries: CountEntry[]): Promise<{ error: string | null }> {

@@ -39,8 +39,8 @@ export default function InventoryCountPage() {
     const [showAddForm, setShowAddForm] = useState(false);
     const [newName, setNewName] = useState("");
     const [newCategory, setNewCategory] = useState("");
-    const [newUnit, setNewUnit] = useState("unit");
-    const [newMinStock, setNewMinStock] = useState("0");
+    const [newUnit, setNewUnit] = useState("");
+    const [newMinStock, setNewMinStock] = useState("");
     const [addingItem, setAddingItem] = useState(false);
 
     useEffect(() => {
@@ -143,10 +143,10 @@ export default function InventoryCountPage() {
         setAddingItem(true);
         const { item, error } = await itemsService.create(user.id, {
             name: newName.trim(),
-            unit: newUnit.trim() || "unit",
+            unit: newUnit.trim(),
             category: newCategory.trim() || null,
             quantity: 0,
-            min_stock: Number(newMinStock) || 0,
+            min_stock: Number(newMinStock),
         });
         setAddingItem(false);
 
@@ -158,8 +158,8 @@ export default function InventoryCountPage() {
         toast.success(`${item.name} added — you'll count it before finishing.`);
         setNewName("");
         setNewCategory("");
-        setNewUnit("unit");
-        setNewMinStock("0");
+        setNewUnit("");
+        setNewMinStock("");
         setShowAddForm(false);
     }
 
@@ -203,12 +203,12 @@ export default function InventoryCountPage() {
                 </label>
                 <label className={labelClass}>
                     Unit
-                    <ComboBox className={inputClass} value={newUnit} onChange={setNewUnit} options={units} placeholder="bottle" />
+                    <ComboBox className={inputClass} value={newUnit} onChange={setNewUnit} options={units} placeholder="unit" />
                 </label>
             </div>
             <label className={labelClass}>
                 Minimum stock
-                <input className={inputClass} type="number" min="0" value={newMinStock} onChange={(e) => setNewMinStock(e.target.value)} />
+                <input className={inputClass} type="number" min="0" value={newMinStock} onChange={(e) => setNewMinStock(e.target.value)} placeholder="0" />
             </label>
             <div className="flex gap-3">
                 <button type="submit" disabled={addingItem} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl py-3 text-base">
@@ -301,7 +301,9 @@ export default function InventoryCountPage() {
                                     <span className="font-semibold text-base text-gray-900 dark:text-zinc-50">{item.name}</span>
                                     <span className="text-sm text-gray-600 dark:text-zinc-400">
                                         {item.category ?? "Uncategorized"} · last {item.quantity} {item.unit}
-                                        {item.expected_quantity != null && <> · ordered {item.pending_order_amount} to reach {item.expected_quantity}</>}
+                                        {item.expected_quantity != null
+                                            ? <> · ordered {item.pending_order_amount} to reach {item.expected_quantity}</>
+                                            : item.min_stock > 0 && <> · min {item.min_stock} {item.unit}</>}
                                     </span>
                                 </div>
                                 <input

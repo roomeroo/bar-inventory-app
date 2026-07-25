@@ -16,9 +16,9 @@ export default function AddItemPage() {
     const router = useRouter();
     const [name, setName] = useState("");
     const [category, setCategory] = useState("");
-    const [unit, setUnit] = useState("unit");
-    const [quantity, setQuantity] = useState("0");
-    const [minStock, setMinStock] = useState("0");
+    const [unit, setUnit] = useState("");
+    const [quantity, setQuantity] = useState("");
+    const [minStock, setMinStock] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [units, setUnits] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
@@ -40,10 +40,10 @@ export default function AddItemPage() {
         setSubmitting(true);
         const { error } = await itemsService.create(user.id, {
             name: name.trim(),
-            unit: unit.trim() || "unit",
+            unit: unit.trim(),
             category: category.trim() || null,
-            quantity: Number(quantity) || 0,
-            min_stock: Number(minStock) || 0,
+            quantity: Number(quantity),
+            min_stock: Number(minStock),
         });
         setSubmitting(false);
 
@@ -52,13 +52,13 @@ export default function AddItemPage() {
             return;
         }
         toast.success("Item added");
-        router.push("/");
+        router.push("/inventory/articles");
     }
 
     return (
         <main className="flex flex-col gap-6 p-6 sm:p-8 max-w-lg mx-auto">
             <div className="flex items-center gap-3 pt-2">
-                <Link href="/" className="text-gray-500 dark:text-zinc-400">
+                <Link href="/inventory/articles" className="text-gray-500 dark:text-zinc-400">
                     <IoArrowBack className="text-xl" />
                 </Link>
                 <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Add item</h1>
@@ -95,7 +95,7 @@ export default function AddItemPage() {
                             value={unit}
                             onChange={setUnit}
                             options={units}
-                            placeholder="bottle"
+                            placeholder="unit"
                         />
                     </label>
                     <label className={labelClass}>
@@ -106,6 +106,7 @@ export default function AddItemPage() {
                             min="0"
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
+                            placeholder="0"
                         />
                     </label>
                 </div>
@@ -118,6 +119,7 @@ export default function AddItemPage() {
                         min="0"
                         value={minStock}
                         onChange={(e) => setMinStock(e.target.value)}
+                        placeholder="0"
                     />
                 </label>
 

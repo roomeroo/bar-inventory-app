@@ -6,9 +6,11 @@ import { IoArrowBack, IoAddCircleOutline, IoReorderThree } from "react-icons/io5
 import { useAuth } from "../../lib/services/auth/auth-context";
 import { itemsService } from "../../lib/services/items/items.service";
 import { isLow } from "../../lib/services/items/low-stock";
+import { inventoryService } from "../../lib/services/inventory/inventory.service";
 import { useDragReorder } from "../../lib/hooks/useDragReorder";
 import ComboBox from "../../components/ComboBox";
 import type { Item } from "../../lib/services/items/items.interface";
+import type { MinStockSuggestion } from "../../lib/services/inventory/inventory.interface";
 
 interface EditState {
     name: string
@@ -39,6 +41,7 @@ export default function ArticlesPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [edit, setEdit] = useState<EditState | null>(null);
     const [saving, setSaving] = useState(false);
+    const [suggestions, setSuggestions] = useState<Record<string, MinStockSuggestion>>({});
 
     useEffect(() => {
         if (!user) return;
@@ -57,6 +60,11 @@ export default function ArticlesPage() {
                 setError(true);
                 setLoading(false);
             }
+            // Best-effort: a trend suggestion is a nice-to-have, never worth
+            // blocking or erroring the page over.
+            inventoryService.getMinStockSuggestions(user!.id).then((s) => {
+                if (!ignore) setSuggestions(s);
+            }).catch(() => {});
         }
 
         load();
@@ -213,6 +221,24 @@ export default function ArticlesPage() {
                                                 placeholder="Min stock"
                                             />
                                         </div>
+                                        {(() => {
+                                            const suggestion = suggestions[item.id];
+                                            if (!suggestion) return null;
+                                            if (Number(item.min_stock) === 0) return null;
+                                            if (suggestion.suggested === Number(edit.min_stock)) return null;
+                                            return (
+                                                <p className="text-xs text-gray-500 dark:text-zinc-400 -mt-1.5">
+                                                    Recent use suggests min {suggestion.suggested} {item.unit} (avg. of last {suggestion.cycles} counts) ·{" "}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEdit({ ...edit, min_stock: String(suggestion.suggested) })}
+                                                        className="font-semibold text-blue-600 dark:text-blue-400"
+                                                    >
+                                                        Use this
+                                                    </button>
+                                                </p>
+                                            );
+                                        })()}
                                         <div className="flex gap-2.5">
                                             <button
                                                 onClick={() => saveEdit(item.id)}

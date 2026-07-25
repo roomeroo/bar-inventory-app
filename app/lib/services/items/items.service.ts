@@ -121,15 +121,23 @@ class ItemsService implements ItemsServiceI {
             .maybeSingle();
         const nextOrder = (lastRow?.sort_order ?? -1) + 1;
 
+        // Single source of truth for "what a blank field becomes" — pages
+        // leave these empty (with a placeholder showing this same default)
+        // rather than pre-filling the input with a real value the user has
+        // to delete first.
+        const unit = input.unit.trim() || "unit";
+        const quantity = Number.isFinite(input.quantity) ? input.quantity : 0;
+        const minStock = Number.isFinite(input.min_stock) ? input.min_stock : 0;
+
         const { data, error } = await supabase
             .from("article")
             .insert({
                 bar_id: barId,
                 category_id: categoryId,
                 name: input.name,
-                unit: input.unit,
-                min_stock: input.min_stock,
-                quantity: input.quantity,
+                unit,
+                min_stock: minStock,
+                quantity,
                 sort_order: nextOrder,
             })
             .select("*, category:category_id(name)")
