@@ -112,7 +112,7 @@ export default function AddItemPage() {
                 </div>
 
                 <label className={labelClass}>
-                    Minimum stock (flag as low at or below this)
+                    Minimum stock (flag as low below this)
                     <input
                         className={inputClass}
                         type="number"
