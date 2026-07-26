@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { IoTrashOutline, IoAddOutline } from "react-icons/io5";
+import { IoTrashOutline, IoAddOutline, IoChevronBack, IoChevronForward } from "react-icons/io5";
 import ComboBox from "../components/ComboBox";
 import ArticleCard, { type EditState } from "./ArticleCard";
 import type { Item } from "../lib/services/items/items.interface";
@@ -21,6 +21,8 @@ interface CategoryColumnProps {
     editingItemId: string | null
     editState: EditState | null
     savingItem: boolean
+    collapsed: boolean
+    onToggleCollapse: () => void
     onRename: (name: string) => void
     onDeleteColumn: () => void
     onStartEditItem: (item: Item) => void
@@ -32,9 +34,12 @@ interface CategoryColumnProps {
 }
 
 export default function CategoryColumn({
-    column, units, editingItemId, editState, savingItem, onRename, onDeleteColumn,
+    column, units, editingItemId, editState, savingItem, collapsed, onToggleCollapse, onRename, onDeleteColumn,
     onStartEditItem, onChangeEditItem, onSaveEditItem, onCancelEditItem, onDeleteItem, onAddItem,
 }: CategoryColumnProps) {
+    // Always called, even while collapsed, so hook order stays stable —
+    // a collapsed column just doesn't render the node this ref would
+    // normally attach to, so it briefly stops being a drop target.
     const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: "column" } });
     const [adding, setAdding] = useState(false);
     const [name, setName] = useState("");
@@ -46,6 +51,24 @@ export default function CategoryColumn({
         setName("");
         setUnit("");
         setAdding(false);
+    }
+
+    if (collapsed) {
+        return (
+            <div className="flex flex-col items-center w-16 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded-2xl py-4 gap-3">
+                <button
+                    onClick={onToggleCollapse}
+                    aria-label="Expandir categoría"
+                    className="text-gray-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                    <IoChevronForward className="text-xl" />
+                </button>
+                <span className="text-base font-semibold text-gray-700 dark:text-zinc-200 whitespace-nowrap tracking-wide py-1 [writing-mode:vertical-rl] rotate-180">
+                    {column.name}
+                </span>
+                <span className="text-sm font-medium text-gray-400 dark:text-zinc-500">{column.items.length}</span>
+            </div>
+        );
     }
 
     return (
@@ -60,6 +83,13 @@ export default function CategoryColumn({
                 ) : (
                     <span className="flex-1 min-w-0 font-semibold text-sm text-gray-500 dark:text-zinc-400 truncate">{column.name}</span>
                 )}
+                <button
+                    onClick={onToggleCollapse}
+                    aria-label="Colapsar categoría"
+                    className="shrink-0 p-1 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                >
+                    <IoChevronBack className="text-sm" />
+                </button>
                 {column.deletable && (
                     <button onClick={onDeleteColumn} aria-label="Eliminar categoría" className="shrink-0 p-1 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400">
                         <IoTrashOutline className="text-sm" />

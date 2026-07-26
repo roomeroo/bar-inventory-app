@@ -6,7 +6,8 @@ import {
     type DragStartEvent, type DragOverEvent, type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { IoAddOutline } from "react-icons/io5";
+import Link from "next/link";
+import { IoAddOutline, IoArrowBack } from "react-icons/io5";
 import { useAuth } from "../lib/services/auth/auth-context";
 import { itemsService } from "../lib/services/items/items.service";
 import { categoriesService } from "../lib/services/categories/categories.service";
@@ -30,6 +31,16 @@ export default function ManageBoard() {
     const [editingItemId, setEditingItemId] = useState<string | null>(null);
     const [editState, setEditState] = useState<EditState | null>(null);
     const [savingItem, setSavingItem] = useState(false);
+    const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+    function toggleCollapse(columnId: string) {
+        setCollapsed((prev) => {
+            const next = new Set(prev);
+            if (next.has(columnId)) next.delete(columnId);
+            else next.add(columnId);
+            return next;
+        });
+    }
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -271,9 +282,14 @@ export default function ManageBoard() {
 
     return (
         <div className="flex flex-col gap-4 p-6 h-full">
-            <div className="pt-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Gestionar</p>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Categorías y artículos</h1>
+            <div className="flex items-center gap-3 pt-2">
+                <Link href="/" aria-label="Volver a Artículos" className="text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400">
+                    <IoArrowBack className="text-xl" />
+                </Link>
+                <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Gestionar</p>
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Categorías y artículos</h1>
+                </div>
             </div>
 
             <DndContext
@@ -292,6 +308,8 @@ export default function ManageBoard() {
                             editingItemId={editingItemId}
                             editState={editState}
                             savingItem={savingItem}
+                            collapsed={collapsed.has(column.id)}
+                            onToggleCollapse={() => toggleCollapse(column.id)}
                             onRename={(name) => handleRenameCategory(column.id, name)}
                             onDeleteColumn={() => handleDeleteCategory(column)}
                             onStartEditItem={startEditItem}

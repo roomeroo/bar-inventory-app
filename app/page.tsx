@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { IoSearch, IoGridOutline } from "react-icons/io5";
+import { IoSearch, IoGridOutline, IoChevronDown, IoChevronForward } from "react-icons/io5";
 import { useAuth } from "./lib/services/auth/auth-context";
 import { itemsService } from "./lib/services/items/items.service";
 import { categoriesService } from "./lib/services/categories/categories.service";
@@ -21,6 +21,16 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [reloadKey, setReloadKey] = useState(0);
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+    function toggleGroup(key: string) {
+        setCollapsedGroups((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+    }
 
     useEffect(() => {
         if (!user) return;
@@ -147,33 +157,51 @@ export default function Home() {
                 </p>
             ) : (
                 <div className="flex flex-col gap-6">
-                    {groups.map((group) => (
-                        <div key={group.key} className="flex flex-col gap-2">
-                            <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">
-                                {group.name}
-                            </p>
-                            <div className="flex flex-col gap-2">
-                                {group.items.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl px-4 py-3 flex items-center justify-between gap-4"
-                                    >
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="font-semibold text-base text-gray-900 dark:text-zinc-50 truncate">
-                                                {item.name}
-                                            </span>
-                                            <span className="text-sm text-gray-500 dark:text-zinc-400">{item.unit}</span>
-                                        </div>
-                                        <QuantityStepper
-                                            value={item.needed_quantity}
-                                            unit={item.unit}
-                                            onChange={(q) => setNeeded(item.id, q)}
-                                        />
+                    {groups.map((group) => {
+                        const isCollapsed = collapsedGroups.has(group.key);
+                        return (
+                            <div key={group.key} className="flex flex-col gap-2">
+                                <button
+                                    onClick={() => toggleGroup(group.key)}
+                                    className="flex items-center gap-1.5 text-left"
+                                >
+                                    {isCollapsed ? (
+                                        <IoChevronForward className="text-sm text-gray-400 dark:text-zinc-500" />
+                                    ) : (
+                                        <IoChevronDown className="text-sm text-gray-400 dark:text-zinc-500" />
+                                    )}
+                                    <span className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">
+                                        {group.name}
+                                    </span>
+                                    <span className="text-xs font-normal normal-case text-gray-400 dark:text-zinc-500">
+                                        ({group.items.length})
+                                    </span>
+                                </button>
+                                {!isCollapsed && (
+                                    <div className="flex flex-col gap-2">
+                                        {group.items.map((item) => (
+                                            <div
+                                                key={item.id}
+                                                className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl px-4 py-3 flex items-center justify-between gap-4"
+                                            >
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="font-semibold text-base text-gray-900 dark:text-zinc-50 truncate">
+                                                        {item.name}
+                                                    </span>
+                                                    <span className="text-sm text-gray-500 dark:text-zinc-400">{item.unit}</span>
+                                                </div>
+                                                <QuantityStepper
+                                                    value={item.needed_quantity}
+                                                    unit={item.unit}
+                                                    onChange={(q) => setNeeded(item.id, q)}
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </main>
