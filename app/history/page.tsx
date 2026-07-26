@@ -2,11 +2,14 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../lib/services/auth/auth-context";
 import { ordersService } from "../lib/services/orders/orders.service";
+import { getBarId } from "../lib/services/bar/bar.service";
+import { useRealtimeRefresh } from "../lib/hooks/useRealtimeRefresh";
 import { downloadShoppingList } from "../lib/download-shopping-list";
 import type { Order, OrderItemRecord } from "../lib/services/orders/orders.interface";
 
 export default function HistoryPage() {
     const { user } = useAuth();
+    const [barId, setBarId] = useState<string | null>(null);
     const [orders, setOrders] = useState<Order[]>([]);
     const [itemsByOrder, setItemsByOrder] = useState<Record<string, OrderItemRecord[]>>({});
     const [loading, setLoading] = useState(true);
@@ -21,7 +24,8 @@ export default function HistoryPage() {
             setLoading(true);
             setError(false);
             try {
-                const [orders, orderItems] = await Promise.all([
+                const [id, orders, orderItems] = await Promise.all([
+                    getBarId(user!.id),
                     ordersService.listOrders(user!.id),
                     ordersService.listOrderItems(user!.id),
                 ]);
@@ -32,6 +36,7 @@ export default function HistoryPage() {
                     (grouped[line.order_id] ??= []).push(line);
                 }
 
+                setBarId(id);
                 setOrders(orders);
                 setItemsByOrder(grouped);
                 setLoading(false);
@@ -46,24 +51,26 @@ export default function HistoryPage() {
         return () => { ignore = true; };
     }, [user, reloadKey]);
 
+    useRealtimeRefresh(barId, ["orders"], () => setReloadKey((k) => k + 1));
+
     return (
         <main className="flex flex-col gap-6 p-6 sm:p-8">
             <div className="pt-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Historial</p>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Pedidos pasados</h1>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">History</p>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Past orders</h1>
             </div>
 
             {error ? (
                 <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-2xl p-4 flex items-center justify-between gap-4">
-                    <p className="text-sm text-red-700 dark:text-red-300">No se pudo cargar el historial.</p>
+                    <p className="text-sm text-red-700 dark:text-red-300">Could not load history.</p>
                     <button onClick={() => setReloadKey((k) => k + 1)} className="text-sm font-semibold text-red-700 dark:text-red-300">
-                        Reintentar
+                        Try again
                     </button>
                 </div>
             ) : loading ? (
-                <p className="text-base text-gray-500 dark:text-zinc-400">Cargando...</p>
+                <p className="text-base text-gray-500 dark:text-zinc-400">Loading...</p>
             ) : orders.length === 0 ? (
-                <p className="text-base text-gray-500 dark:text-zinc-400">Todavía no se ha marcado ningún pedido.</p>
+                <p className="text-base text-gray-500 dark:text-zinc-400">No orders placed yet.</p>
             ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                     {orders.map((order) => {
@@ -77,7 +84,7 @@ export default function HistoryPage() {
                                     <span className="font-semibold text-base text-gray-900 dark:text-zinc-50">
                                         {new Date(order.created_at).toLocaleString()}
                                     </span>
-                                    <span className="text-sm text-gray-600 dark:text-zinc-400">{lines.length} artículos</span>
+                                    <span className="text-sm text-gray-600 dark:text-zinc-400">{lines.length} items</span>
                                 </div>
                                 <div className="flex flex-col gap-1.5 mt-1">
                                     {lines.map((line) => (
@@ -93,7 +100,7 @@ export default function HistoryPage() {
                                     )}
                                     className="text-sm font-semibold text-blue-600 dark:text-blue-400 self-start mt-1"
                                 >
-                                    Descargar (.txt)
+                                    Download (.txt)
                                 </button>
                             </div>
                         );

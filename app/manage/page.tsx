@@ -14,9 +14,9 @@ export default function ManagePage() {
             </div>
             <div className="lg:hidden flex flex-col items-center justify-center gap-3 p-10 text-center min-h-[60vh]">
                 <IoDesktopOutline className="text-4xl text-gray-400 dark:text-zinc-500" />
-                <p className="text-base font-semibold text-gray-700 dark:text-zinc-300">Solo disponible en ordenador</p>
+                <p className="text-base font-semibold text-gray-700 dark:text-zinc-300">Desktop only</p>
                 <p className="text-sm text-gray-500 dark:text-zinc-400 max-w-xs">
-                    Abre esta página desde un ordenador para reorganizar categorías y artículos.
+                    Open this page from a computer to reorganize categories and items.
                 </p>
             </div>
         </>

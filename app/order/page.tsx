@@ -5,6 +5,8 @@ import { IoCopyOutline, IoDownloadOutline, IoCheckmarkCircleOutline, IoCloseCirc
 import { useAuth } from "../lib/services/auth/auth-context";
 import { itemsService } from "../lib/services/items/items.service";
 import { ordersService } from "../lib/services/orders/orders.service";
+import { getBarId } from "../lib/services/bar/bar.service";
+import { useRealtimeRefresh } from "../lib/hooks/useRealtimeRefresh";
 import { downloadShoppingList, copyShoppingListToClipboard, type ShoppingListLine } from "../lib/download-shopping-list";
 import QuantityStepper from "../components/QuantityStepper";
 import type { Item } from "../lib/services/items/items.interface";
@@ -15,6 +17,7 @@ function toLines(items: Item[]): ShoppingListLine[] {
 
 export default function OrderPage() {
     const { user } = useAuth();
+    const [barId, setBarId] = useState<string | null>(null);
     const [items, setItems] = useState<Item[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -30,8 +33,12 @@ export default function OrderPage() {
             setLoading(true);
             setError(false);
             try {
-                const data = await itemsService.list(user!.id);
+                const [id, data] = await Promise.all([
+                    getBarId(user!.id),
+                    itemsService.list(user!.id),
+                ]);
                 if (ignore) return;
+                setBarId(id);
                 setItems(data.filter((item) => item.needed_quantity > 0));
                 setLoading(false);
             } catch {
@@ -44,6 +51,8 @@ export default function OrderPage() {
         load();
         return () => { ignore = true; };
     }, [user, reloadKey]);
+
+    useRealtimeRefresh(barId, ["article"], () => setReloadKey((k) => k + 1));
 
     function setNeeded(itemId: string, quantity: number) {
         if (quantity <= 0) {
@@ -72,9 +81,9 @@ export default function OrderPage() {
     async function handleCopy() {
         try {
             await copyShoppingListToClipboard(new Date(), toLines(items));
-            toast.success("Copiado al portapapeles");
+            toast.success("Copied to clipboard");
         } catch {
-            toast.error("No se pudo copiar.");
+            toast.error("Could not copy.");
         }
     }
 
@@ -94,7 +103,7 @@ export default function OrderPage() {
             toast.error(error);
             return;
         }
-        toast.success("Pedido guardado en el historial");
+        toast.success("Order saved to history");
         setConfirmedOrder({ date: new Date(), lines: toLines(items) });
         setItems([]);
     }
@@ -103,8 +112,8 @@ export default function OrderPage() {
         return (
             <main className="flex flex-col gap-6 p-6 sm:p-8">
                 <div className="pt-2">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Pedido</p>
-                    <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Pedido marcado</h1>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Order</p>
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Order marked</h1>
                 </div>
                 <div className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-2">
                     {confirmedOrder.lines.map((line) => (
@@ -117,16 +126,16 @@ export default function OrderPage() {
                     onClick={() => downloadShoppingList(confirmedOrder.date, confirmedOrder.lines)}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl py-3.5 text-base"
                 >
-                    Descargar lista (.txt)
+                    Download list (.txt)
                 </button>
                 <p className="text-xs text-center text-gray-500 dark:text-zinc-400">
-                    También puedes volver a descargarlo luego desde Historial.
+                    You can also re-download it later from History.
                 </p>
                 <button
                     onClick={() => { setConfirmedOrder(null); setReloadKey((k) => k + 1); }}
                     className="text-sm font-semibold text-blue-600 dark:text-blue-400 self-center"
                 >
-                    Volver al pedido
+                    Back to order
                 </button>
             </main>
         );
@@ -135,22 +144,22 @@ export default function OrderPage() {
     return (
         <main className="flex flex-col gap-6 p-6 sm:p-8">
             <div className="pt-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Pedido</p>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Lo que hace falta pedir</h1>
+                <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Order</p>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">What needs ordering</h1>
             </div>
 
             {error ? (
                 <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-2xl p-4 flex items-center justify-between gap-4">
-                    <p className="text-sm text-red-700 dark:text-red-300">No se pudo cargar el pedido.</p>
+                    <p className="text-sm text-red-700 dark:text-red-300">Could not load the order.</p>
                     <button onClick={() => setReloadKey((k) => k + 1)} className="text-sm font-semibold text-red-700 dark:text-red-300">
-                        Reintentar
+                        Try again
                     </button>
                 </div>
             ) : loading ? (
-                <p className="text-base text-gray-500 dark:text-zinc-400">Cargando...</p>
+                <p className="text-base text-gray-500 dark:text-zinc-400">Loading...</p>
             ) : items.length === 0 ? (
                 <p className="text-base text-gray-500 dark:text-zinc-400">
-                    Nada marcado todavía. Ve a Artículos y marca las cantidades que hacen falta.
+                    Nothing marked yet. Go to Items and mark the quantities you need.
                 </p>
             ) : (
                 <div className="flex flex-col gap-4">
@@ -163,14 +172,14 @@ export default function OrderPage() {
                                 <div className="flex flex-col min-w-0">
                                     <span className="font-semibold text-base text-gray-900 dark:text-zinc-50 truncate">{item.name}</span>
                                     <span className="text-sm text-gray-500 dark:text-zinc-400">
-                                        {item.category ?? "Sin categoría"} · {item.unit}
+                                        {item.category ?? "Uncategorized"} · {item.unit}
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
                                     <QuantityStepper value={item.needed_quantity} unit={item.unit} onChange={(q) => setNeeded(item.id, q)} />
                                     <button
                                         onClick={() => removeLine(item.id)}
-                                        aria-label="Quitar del pedido"
+                                        aria-label="Remove from order"
                                         className="text-gray-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400"
                                     >
                                         <IoCloseCircleOutline className="text-xl" />
@@ -186,14 +195,14 @@ export default function OrderPage() {
                             className="flex items-center justify-center gap-2 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 font-semibold rounded-xl py-3 text-sm"
                         >
                             <IoCopyOutline className="text-lg" />
-                            Copiar
+                            Copy
                         </button>
                         <button
                             onClick={handleDownload}
                             className="flex items-center justify-center gap-2 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-zinc-300 font-semibold rounded-xl py-3 text-sm"
                         >
                             <IoDownloadOutline className="text-lg" />
-                            Descargar .txt
+                            Download .txt
                         </button>
                     </div>
 
@@ -203,7 +212,7 @@ export default function OrderPage() {
                         className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-xl py-3.5 text-base"
                     >
                         <IoCheckmarkCircleOutline className="text-xl" />
-                        {submitting ? "Marcando..." : "Marcar como pedido"}
+                        {submitting ? "Marking..." : "Mark as ordered"}
                     </button>
                 </div>
             )}

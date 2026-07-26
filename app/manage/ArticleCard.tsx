@@ -40,16 +40,16 @@ export default function ArticleCard({
                     className={inputClass}
                     value={edit.name}
                     onChange={(e) => onChangeEdit({ ...edit, name: e.target.value })}
-                    placeholder="Nombre"
+                    placeholder="Name"
                     autoFocus
                 />
-                <ComboBox className={inputClass} value={edit.unit} onChange={(unit) => onChangeEdit({ ...edit, unit })} options={units} placeholder="Unidad" />
+                <ComboBox className={inputClass} value={edit.unit} onChange={(unit) => onChangeEdit({ ...edit, unit })} options={units} placeholder="Unit" />
                 <div className="flex gap-2">
                     <button onClick={onSaveEdit} disabled={saving} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold rounded-lg py-1.5 text-xs">
-                        {saving ? "Guardando..." : "Guardar"}
+                        {saving ? "Saving..." : "Save"}
                     </button>
                     <button onClick={onCancelEdit} className="flex-1 border border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 font-semibold rounded-lg py-1.5 text-xs">
-                        Cancelar
+                        Cancel
                     </button>
                 </div>
             </div>
@@ -61,7 +61,7 @@ export default function ArticleCard({
             <button
                 {...attributes}
                 {...listeners}
-                aria-label="Arrastrar artículo"
+                aria-label="Drag item"
                 style={{ touchAction: "none", cursor: isDragging ? "grabbing" : "grab" }}
                 className="shrink-0 text-gray-400 dark:text-zinc-500 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-700"
             >
@@ -71,10 +71,10 @@ export default function ArticleCard({
                 <span className="text-sm font-medium text-gray-900 dark:text-zinc-50 truncate">{item.name}</span>
                 <span className="text-xs text-gray-500 dark:text-zinc-400">{item.unit}</span>
             </div>
-            <button onClick={onStartEdit} aria-label="Editar" className="shrink-0 p-1.5 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-blue-600 dark:hover:text-blue-400">
+            <button onClick={onStartEdit} aria-label="Edit" className="shrink-0 p-1.5 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700 hover:text-blue-600 dark:hover:text-blue-400">
                 <IoPencilOutline className="text-base" />
             </button>
-            <button onClick={onDelete} aria-label="Eliminar" className="shrink-0 p-1.5 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400">
+            <button onClick={onDelete} aria-label="Delete" className="shrink-0 p-1.5 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400">
                 <IoTrashOutline className="text-base" />
             </button>
         </div>

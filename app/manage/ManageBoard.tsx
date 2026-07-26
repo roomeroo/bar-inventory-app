@@ -11,6 +11,8 @@ import { IoAddOutline, IoArrowBack } from "react-icons/io5";
 import { useAuth } from "../lib/services/auth/auth-context";
 import { itemsService } from "../lib/services/items/items.service";
 import { categoriesService } from "../lib/services/categories/categories.service";
+import { getBarId } from "../lib/services/bar/bar.service";
+import { useRealtimeRefresh } from "../lib/hooks/useRealtimeRefresh";
 import CategoryColumn, { type BoardColumn } from "./CategoryColumn";
 import ArticleCard, { type EditState } from "./ArticleCard";
 import type { Item } from "../lib/services/items/items.interface";
@@ -19,6 +21,7 @@ const UNCATEGORIZED = "__uncategorized__";
 
 export default function ManageBoard() {
     const { user } = useAuth();
+    const [barId, setBarId] = useState<string | null>(null);
     const [columns, setColumns] = useState<BoardColumn[]>([]);
     const [units, setUnits] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -52,7 +55,8 @@ export default function ManageBoard() {
             setLoading(true);
             setError(false);
             try {
-                const [categories, items, unitList] = await Promise.all([
+                const [id, categories, items, unitList] = await Promise.all([
+                    getBarId(user!.id),
                     categoriesService.list(user!.id),
                     itemsService.list(user!.id),
                     itemsService.listUnits(user!.id),
@@ -73,12 +77,13 @@ export default function ManageBoard() {
                 }));
                 built.push({
                     id: UNCATEGORIZED,
-                    name: "Sin categoría",
+                    name: "Uncategorized",
                     items: byCategory.get(UNCATEGORIZED) ?? [],
                     deletable: false,
                     renamable: false,
                 });
 
+                setBarId(id);
                 setColumns(built);
                 setUnits(unitList);
                 setLoading(false);
@@ -92,6 +97,12 @@ export default function ManageBoard() {
         load();
         return () => { ignore = true; };
     }, [user, reloadKey]);
+
+    // Paused mid-drag: a background refetch would replace `columns` out
+    // from under the active drag gesture and dnd-kit's sortable state.
+    useRealtimeRefresh(barId, ["article", "category"], () => setReloadKey((k) => k + 1), {
+        paused: activeItem !== null,
+    });
 
     function findColumn(id: string): BoardColumn | undefined {
         return columns.find((c) => c.id === id || c.items.some((i) => i.id === id));
@@ -176,7 +187,7 @@ export default function ManageBoard() {
         if (!user || !newCategoryName.trim()) return;
         const { category, error } = await categoriesService.create(user.id, newCategoryName.trim());
         if (error || !category) {
-            toast.error(error ?? "No se pudo crear la categoría.");
+            toast.error(error ?? "Could not create the category.");
             return;
         }
         setColumns((prev) => [
@@ -199,7 +210,7 @@ export default function ManageBoard() {
     }
 
     async function handleDeleteCategory(column: BoardColumn) {
-        if (!window.confirm(`¿Eliminar la categoría "${column.name}"? Sus artículos pasarán a "Sin categoría".`)) return;
+        if (!window.confirm(`Delete category "${column.name}"? Its items will move to "Uncategorized".`)) return;
         const { error } = await categoriesService.remove(column.id);
         if (error) {
             toast.error(error);
@@ -218,7 +229,7 @@ export default function ManageBoard() {
         const categoryId = columnId === UNCATEGORIZED ? null : columnId;
         const { item, error } = await itemsService.create(user.id, { name, unit, category_id: categoryId });
         if (error || !item) {
-            toast.error(error ?? "No se pudo añadir el artículo.");
+            toast.error(error ?? "Could not add the item.");
             return;
         }
         setColumns((prev) => prev.map((c) => (c.id === columnId ? { ...c, items: [...c.items, item] } : c)));
@@ -232,7 +243,7 @@ export default function ManageBoard() {
     async function saveEditItem() {
         if (!user || !editingItemId || !editState) return;
         if (!editState.name.trim()) {
-            toast.error("El nombre es obligatorio.");
+            toast.error("Name is required.");
             return;
         }
         setSavingItem(true);
@@ -254,7 +265,7 @@ export default function ManageBoard() {
     }
 
     async function deleteItem(item: Item) {
-        if (!window.confirm(`¿Eliminar "${item.name}"? No se puede deshacer.`)) return;
+        if (!window.confirm(`Delete "${item.name}"? This can't be undone.`)) return;
         const { error } = await itemsService.remove(item.id);
         if (error) {
             toast.error(error);
@@ -264,16 +275,16 @@ export default function ManageBoard() {
     }
 
     if (loading) {
-        return <div className="p-8"><p className="text-base text-gray-500 dark:text-zinc-400">Cargando tablero...</p></div>;
+        return <div className="p-8"><p className="text-base text-gray-500 dark:text-zinc-400">Loading board...</p></div>;
     }
 
     if (error) {
         return (
             <div className="p-8">
                 <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-2xl p-4 flex items-center justify-between gap-4">
-                    <p className="text-sm text-red-700 dark:text-red-300">No se pudo cargar el tablero.</p>
+                    <p className="text-sm text-red-700 dark:text-red-300">Could not load the board.</p>
                     <button onClick={() => setReloadKey((k) => k + 1)} className="text-sm font-semibold text-red-700 dark:text-red-300">
-                        Reintentar
+                        Try again
                     </button>
                 </div>
             </div>
@@ -283,12 +294,12 @@ export default function ManageBoard() {
     return (
         <div className="flex flex-col gap-4 p-6 h-full">
             <div className="flex items-center gap-3 pt-2">
-                <Link href="/" aria-label="Volver a Artículos" className="text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400">
+                <Link href="/" aria-label="Back to Items" className="text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400">
                     <IoArrowBack className="text-xl" />
                 </Link>
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Gestionar</p>
-                    <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Categorías y artículos</h1>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-400">Manage</p>
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Categories and items</h1>
                 </div>
             </div>
 
@@ -329,12 +340,12 @@ export default function ManageBoard() {
                                     value={newCategoryName}
                                     onChange={(e) => setNewCategoryName(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
-                                    placeholder="Nombre de la categoría"
+                                    placeholder="Category name"
                                     className="rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-2.5 py-2 text-sm text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                                 <div className="flex gap-2">
-                                    <button onClick={handleAddCategory} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-1.5 text-xs">Añadir</button>
-                                    <button onClick={() => { setAddingCategory(false); setNewCategoryName(""); }} className="flex-1 border border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 font-semibold rounded-lg py-1.5 text-xs">Cancelar</button>
+                                    <button onClick={handleAddCategory} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-1.5 text-xs">Add</button>
+                                    <button onClick={() => { setAddingCategory(false); setNewCategoryName(""); }} className="flex-1 border border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 font-semibold rounded-lg py-1.5 text-xs">Cancel</button>
                                 </div>
                             </div>
                         ) : (
@@ -343,7 +354,7 @@ export default function ManageBoard() {
                                 className="flex items-center justify-center gap-1.5 w-full text-sm font-medium text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-2xl py-3"
                             >
                                 <IoAddOutline className="text-lg" />
-                                Añadir categoría
+                                Add category
                             </button>
                         )}
                     </div>

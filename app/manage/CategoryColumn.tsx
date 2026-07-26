@@ -58,7 +58,7 @@ export default function CategoryColumn({
             <div className="flex flex-col items-center w-16 shrink-0 bg-gray-100 dark:bg-zinc-800 rounded-2xl py-4 gap-3">
                 <button
                     onClick={onToggleCollapse}
-                    aria-label="Expandir categoría"
+                    aria-label="Expand category"
                     className="text-gray-400 dark:text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400"
                 >
                     <IoChevronForward className="text-xl" />
@@ -85,13 +85,13 @@ export default function CategoryColumn({
                 )}
                 <button
                     onClick={onToggleCollapse}
-                    aria-label="Colapsar categoría"
+                    aria-label="Collapse category"
                     className="shrink-0 p-1 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-gray-200 dark:hover:bg-zinc-700"
                 >
                     <IoChevronBack className="text-sm" />
                 </button>
                 {column.deletable && (
-                    <button onClick={onDeleteColumn} aria-label="Eliminar categoría" className="shrink-0 p-1 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400">
+                    <button onClick={onDeleteColumn} aria-label="Delete category" className="shrink-0 p-1 rounded-md text-gray-400 dark:text-zinc-500 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400">
                         <IoTrashOutline className="text-sm" />
                     </button>
                 )}
@@ -127,7 +127,7 @@ export default function CategoryColumn({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && submitAdd()}
-                        placeholder="Nombre del artículo"
+                        placeholder="Item name"
                         className="rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-2.5 py-2 text-sm text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <ComboBox
@@ -135,11 +135,11 @@ export default function CategoryColumn({
                         value={unit}
                         onChange={setUnit}
                         options={units}
-                        placeholder="Unidad"
+                        placeholder="Unit"
                     />
                     <div className="flex gap-2">
-                        <button onClick={submitAdd} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-1.5 text-xs">Añadir</button>
-                        <button onClick={() => { setAdding(false); setName(""); setUnit(""); }} className="flex-1 border border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 font-semibold rounded-lg py-1.5 text-xs">Cancelar</button>
+                        <button onClick={submitAdd} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-1.5 text-xs">Add</button>
+                        <button onClick={() => { setAdding(false); setName(""); setUnit(""); }} className="flex-1 border border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 font-semibold rounded-lg py-1.5 text-xs">Cancel</button>
                     </div>
                 </div>
             ) : (
@@ -148,7 +148,7 @@ export default function CategoryColumn({
                     className="flex items-center justify-center gap-1.5 text-sm font-medium text-gray-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 py-1.5"
                 >
                     <IoAddOutline className="text-lg" />
-                    Añadir artículo
+                    Add item
                 </button>
             )}
         </div>

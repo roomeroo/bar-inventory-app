@@ -14,7 +14,7 @@ Anyone can self-host their own copy. Each deployment uses its **own** Supabase p
 
 ### 1. Create your Supabase project
 
-Go to [supabase.com](https://supabase.com), create a new project, then open **SQL Editor** and paste in the entire contents of [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) and run it, then do the same with [`supabase/migrations/0002_rework_needs_board.sql`](supabase/migrations/0002_rework_needs_board.sql). Together these create all the tables and Row Level Security policies the app needs. (If you use the Supabase CLI locally, `supabase db push` applies both in order.)
+Go to [supabase.com](https://supabase.com), create a new project, then open **SQL Editor** and run, in order, [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`0002_rework_needs_board.sql`](supabase/migrations/0002_rework_needs_board.sql), and [`0003_enable_realtime.sql`](supabase/migrations/0003_enable_realtime.sql). Together these create all the tables, Row Level Security policies, and realtime publication the app needs. (If you use the Supabase CLI locally, `supabase db push` applies all three in order.)
 
 ### 2. Check three Auth settings (required)
 
@@ -69,8 +69,12 @@ Same idea as Vercel: connect the repo, set the two environment variables, deploy
 
 ## How the order list works
 
-Every article has one number: **needed quantity** — how many units someone has flagged as needed. Mark it from the Articles list (search or filter by category first, if the catalog is long), and it shows up on the Order screen along with everything else marked. From there you can tweak the amount, remove a line entirely (e.g. it's too expensive to order right now), copy the list to your clipboard, download it as a `.txt`, or mark it as ordered — which saves it to History and clears every needed quantity back to zero.
+Every article has one number: **needed quantity** — how many units someone has flagged as needed. Mark it from the Items list (search or filter by category first, if the catalog is long), and it shows up on the Order screen along with everything else marked. From there you can tweak the amount, remove a line entirely (e.g. it's too expensive to order right now), copy the list to your clipboard, download it as a `.txt`, or mark it as ordered — which saves it to History and clears every needed quantity back to zero.
 
-## Managing categories and articles
+## Managing categories and items
 
-The catalog itself (categories and articles) is managed from a separate, desktop-only screen (linked as "Gestionar" from the Articles list): a Trello-style board where each column is a category and each card is an article, draggable between columns. It's gated to larger screens because rearranging a catalog like this needs more room than a phone can give it — on mobile, that link just shows a message instead of the board.
+The catalog itself (categories and items) is managed from a separate, desktop-only screen (linked as "Manage" from the Items list): a Trello-style board where each column is a category and each card is an item, draggable between columns. It's gated to larger screens because rearranging a catalog like this needs more room than a phone can give it — on mobile, that link just shows a message instead of the board.
+
+## Live sync across devices
+
+Everything — needed quantities, the catalog, orders — updates in real time via Supabase Realtime. If two people have the app open at once (e.g. one marking items behind the bar while another manages the catalog on a laptop), changes made by one show up for the other within about a second, no refresh needed.
