@@ -5,11 +5,10 @@ export interface Item {
     id: string
     name: string
     unit: string
+    category_id: string | null
     category: string | null
-    min_stock: number
-    quantity: number
-    expected_quantity: number | null
-    pending_order_amount: number | null
+    needed_quantity: number
+    sort_order: number
     created_at: string
     updated_at: string
 }
@@ -17,21 +16,17 @@ export interface Item {
 export interface NewItemInput {
     name: string
     unit: string
-    category?: string | null
-    min_stock: number
-    quantity: number
+    category_id?: string | null
 }
 
 export interface ItemsServiceI {
     list(userId: string): Promise<Item[]>
     listUnits(userId: string): Promise<string[]>
-    listCategories(userId: string): Promise<string[]>
     reorder(orderedIds: string[]): Promise<{ error: string | null }>
+    moveToCategory(itemId: string, categoryId: string | null, orderedIds: string[]): Promise<{ error: string | null }>
     create(userId: string, input: NewItemInput): Promise<{ item: Item | null; error: string | null }>
     update(userId: string, itemId: string, input: Partial<NewItemInput>): Promise<{ error: string | null }>
     remove(itemId: string): Promise<{ error: string | null }>
-    updateFields(
-        itemId: string,
-        fields: Partial<Pick<Item, "quantity" | "expected_quantity" | "pending_order_amount">>
-    ): Promise<{ error: string | null }>
+    setNeeded(itemId: string, quantity: number): Promise<{ error: string | null }>
+    clearNeeded(itemId: string): Promise<{ error: string | null }>
 }

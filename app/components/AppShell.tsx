@@ -17,6 +17,10 @@ function Shell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
     const isAuthRoute = AUTH_ROUTES.includes(pathname);
+    // The manage board is desktop-only and needs real horizontal room for
+    // its columns — wider than the phone-style shell every other page
+    // uses, and with no bottom tab bar eating into that space.
+    const isManageRoute = pathname.startsWith("/manage");
 
     useEffect(() => {
         if (loading) return;
@@ -37,9 +41,11 @@ function Shell({ children }: { children: React.ReactNode }) {
     if (user && isAuthRoute) return null;
 
     const showChrome = Boolean(user) && !isAuthRoute;
+    const showBottomNav = showChrome && !isManageRoute;
+    const width = isManageRoute ? "max-w-full" : SHELL_WIDTH;
 
     return (
-        <div className={`${SHELL_WIDTH} mx-auto min-h-screen bg-white dark:bg-zinc-900 sm:shadow-xl sm:my-6 sm:rounded-3xl sm:overflow-hidden flex flex-col`}>
+        <div className={`${width} mx-auto min-h-screen bg-white dark:bg-zinc-900 ${isManageRoute ? "" : "sm:shadow-xl sm:my-6 sm:rounded-3xl sm:overflow-hidden"} flex flex-col`}>
             <div className={`flex items-center ${showChrome ? "justify-between" : "justify-end"} gap-3 px-6 pt-5`}>
                 {showChrome && (
                     <span className="text-sm font-medium text-gray-600 dark:text-zinc-400">@{user!.username}</span>
@@ -53,10 +59,10 @@ function Shell({ children }: { children: React.ReactNode }) {
                     )}
                 </div>
             </div>
-            <div className={showChrome ? "flex-1 pb-24" : "flex-1"}>
+            <div className={showBottomNav ? "flex-1 pb-24" : "flex-1"}>
                 {children}
             </div>
-            {showChrome && (
+            {showBottomNav && (
                 <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full ${SHELL_WIDTH} bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-zinc-800 sm:rounded-b-3xl`}>
                     <ul className="flex">
                         {routes.map((route) => (

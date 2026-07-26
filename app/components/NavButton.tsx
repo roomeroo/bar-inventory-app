@@ -12,8 +12,8 @@ export interface NavButtonProps {
 }
 
 export default function NavButton({ route }: NavButtonProps ) {    
-    const iconMap = { 
-        inventory: CiBoxList,
+    const iconMap = {
+        articles: CiBoxList,
         order: CiShop,
         history: MdHistory,
     }

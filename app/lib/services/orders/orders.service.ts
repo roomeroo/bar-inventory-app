@@ -68,16 +68,10 @@ class OrdersService implements OrdersServiceI {
             return { error: orderItemsError.message };
         }
 
-        // Placing an order never changes items.quantity — it only records
-        // what we now expect to have, which the next inventory count
-        // compares against and then resolves.
+        // Confirming an order clears the needed_quantity for every item
+        // that was just ordered, so the order list starts empty again.
         const updateResults = await Promise.all(
-            lines.map(({ item, quantity }) =>
-                itemsService.updateFields(item.id, {
-                    expected_quantity: item.quantity + quantity,
-                    pending_order_amount: quantity,
-                })
-            )
+            lines.map(({ item }) => itemsService.clearNeeded(item.id))
         );
         const failed = updateResults.find((r) => r.error);
         if (failed) return { error: failed.error };

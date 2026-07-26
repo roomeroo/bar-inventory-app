@@ -1,8 +1,8 @@
-# Bar Inventory
+# Bar Needs Board
 
-A small mobile-style inventory tracker for a bar: keep a running count of stock, generate an order list from what's running low, and see a history of past inventory counts. Built with Next.js and Supabase.
+A small mobile-style app for a bar: mark how many units of each article need ordering, build an order list from what's been marked, and keep a history of past orders. There's no inventory count — nothing here tracks actual stock on hand. Built with Next.js and Supabase.
 
-Anyone can self-host their own copy. Each deployment uses its **own** Supabase project — there's no shared backend. Within one deployment, any number of accounts can sign up, and every account's inventory, orders, and history are fully isolated from every other account (enforced by Postgres Row Level Security, not just app code).
+Anyone can self-host their own copy. Each deployment uses its **own** Supabase project — there's no shared backend. Within one deployment, any number of accounts can sign up, and every account's catalog, orders, and history are fully isolated from every other account (enforced by Postgres Row Level Security, not just app code).
 
 ## Stack
 
@@ -14,7 +14,7 @@ Anyone can self-host their own copy. Each deployment uses its **own** Supabase p
 
 ### 1. Create your Supabase project
 
-Go to [supabase.com](https://supabase.com), create a new project, then open **SQL Editor** and paste in the entire contents of [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) and run it. This creates all the tables and Row Level Security policies the app needs. (If you use the Supabase CLI locally, `supabase db push` works too.)
+Go to [supabase.com](https://supabase.com), create a new project, then open **SQL Editor** and paste in the entire contents of [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) and run it, then do the same with [`supabase/migrations/0002_rework_needs_board.sql`](supabase/migrations/0002_rework_needs_board.sql). Together these create all the tables and Row Level Security policies the app needs. (If you use the Supabase CLI locally, `supabase db push` applies both in order.)
 
 ### 2. Check three Auth settings (required)
 
@@ -67,10 +67,10 @@ If you fork/rename the repo, update `basePath` in [`app/lib/base-path.ts`](app/l
 
 Same idea as Vercel: connect the repo, set the two environment variables, deploy. Both have first-class Next.js static export support.
 
-## How the stock numbers work
+## How the order list works
 
-Each item tracks more than just "how many do we have":
+Every article has one number: **needed quantity** — how many units someone has flagged as needed. Mark it from the Articles list (search or filter by category first, if the catalog is long), and it shows up on the Order screen along with everything else marked. From there you can tweak the amount, remove a line entirely (e.g. it's too expensive to order right now), copy the list to your clipboard, download it as a `.txt`, or mark it as ordered — which saves it to History and clears every needed quantity back to zero.
 
-- **Quantity** — the last count you entered.
-- **Min stock** — a fixed floor; below or at this, a brand-new item (one that's never been ordered) is flagged low.
-- **Expected quantity** — set automatically when you place an order (`quantity + amount ordered`). Until your next inventory count, the item is compared against this instead of min stock — so if you had 2, ordered 4 (expecting 6), and the next count finds only 3, it's flagged low even though 3 might be above min stock, and History shows "ordered 4 to reach 6, found 3". Once you save that count, the expectation clears and 3 becomes the new baseline until you order again.
+## Managing categories and articles
+
+The catalog itself (categories and articles) is managed from a separate, desktop-only screen (linked as "Gestionar" from the Articles list): a Trello-style board where each column is a category and each card is an article, draggable between columns. It's gated to larger screens because rearranging a catalog like this needs more room than a phone can give it — on mobile, that link just shows a message instead of the board.
