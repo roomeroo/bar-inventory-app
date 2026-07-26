@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { IoArrowBack, IoAddCircleOutline, IoReorderThree } from "react-icons/io5";
+import { IoArrowBack, IoAddCircleOutline, IoReorderThree, IoArrowForward, IoSearchOutline, IoCloseCircle } from "react-icons/io5";
 import { useAuth } from "../../lib/services/auth/auth-context";
 import { itemsService } from "../../lib/services/items/items.service";
 import { inventoryService } from "../../lib/services/inventory/inventory.service";
@@ -35,6 +35,8 @@ export default function InventoryCountPage() {
     const [listValues, setListValues] = useState<Record<string, string>>({});
     const [reviewValues, setReviewValues] = useState<Record<string, string>>({});
     const [saving, setSaving] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("");
 
     const [showAddForm, setShowAddForm] = useState(false);
     const [newName, setNewName] = useState("");
@@ -106,6 +108,18 @@ export default function InventoryCountPage() {
 
     const filledCount = items.filter((i) => parseCount(listValues[i.id] ?? "") !== null).length;
     const allListFilled = items.length > 0 && filledCount === items.length;
+
+    // Search/category filter only affects what's visible in the list
+    // phase — completion is always judged against the full `items` array
+    // above, so filtering never lets you sneak past an uncounted item.
+    const visibleItems = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+        return items.filter((item) => {
+            if (categoryFilter && item.category !== categoryFilter) return false;
+            if (!query) return true;
+            return item.name.toLowerCase().includes(query) || (item.category ?? "").toLowerCase().includes(query);
+        });
+    }, [items, searchQuery, categoryFilter]);
 
     function goBackLink() {
         const hasProgress = Object.values(listValues).some((v) => v.trim() !== "")
@@ -258,9 +272,18 @@ export default function InventoryCountPage() {
                 </div>
             ) : phase === "reorder" ? (
                 <div className="flex flex-col gap-4">
-                    <p className="text-sm text-gray-600 dark:text-zinc-400">
-                        Drag the handle to arrange items in the order you&apos;ll walk through them (optional) — this order is saved for next time too.
-                    </p>
+                    <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm text-gray-600 dark:text-zinc-400 flex-1">
+                            Drag the handle to arrange items in the order you&apos;ll walk through them (optional) — this order is saved for next time too.
+                        </p>
+                        <button
+                            onClick={() => setPhase("list")}
+                            className="shrink-0 flex items-center gap-1 text-sm font-semibold text-blue-600 dark:text-blue-400 py-1"
+                        >
+                            Skip
+                            <IoArrowForward />
+                        </button>
+                    </div>
                     <div className="flex flex-col gap-3">
                         {items.map((item) => (
                             <div
@@ -276,13 +299,17 @@ export default function InventoryCountPage() {
                                     onPointerCancel={onPointerUp}
                                     aria-label="Drag to reorder"
                                     style={{ touchAction: "none", cursor: draggedId === item.id ? "grabbing" : "grab" }}
-                                    className="text-gray-400 dark:text-zinc-500 p-2 -m-2"
+                                    className="shrink-0 text-gray-500 dark:text-zinc-400 p-2 rounded-lg bg-gray-200/70 dark:bg-zinc-700/60"
                                 >
                                     <IoReorderThree className="text-xl" />
                                 </button>
-                                <div className="flex flex-col flex-1">
-                                    <span className="font-medium text-base text-gray-900 dark:text-zinc-50">{item.name}</span>
-                                    <span className="text-sm text-gray-600 dark:text-zinc-400">{item.category ?? "Uncategorized"}</span>
+                                <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                    <span className="font-medium text-base text-gray-900 dark:text-zinc-50 truncate">{item.name}</span>
+                                    {item.category && (
+                                        <span className="self-start text-xs font-medium text-gray-600 dark:text-zinc-300 bg-gray-200 dark:bg-zinc-700 rounded-full px-2 py-0.5">
+                                            {item.category}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -294,8 +321,43 @@ export default function InventoryCountPage() {
             ) : phase === "list" ? (
                 <div className="flex flex-col gap-4">
                     <p className="text-sm font-medium text-gray-600 dark:text-zinc-400">{filledCount} of {items.length} counted</p>
+
+                    <div className="flex flex-col sm:flex-row gap-2.5">
+                        <div className="relative flex-1">
+                            <IoSearchOutline className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500 text-lg" />
+                            <input
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search by name or category"
+                                className="w-full rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 pl-10 pr-9 py-2.5 text-base text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery("")}
+                                    aria-label="Clear search"
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500"
+                                >
+                                    <IoCloseCircle className="text-lg" />
+                                </button>
+                            )}
+                        </div>
+                        <select
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 px-3 py-2.5 text-base text-gray-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">All categories</option>
+                            {categories.map((c) => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {visibleItems.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-zinc-400">No items match this search.</p>
+                    ) : (
                     <div className="flex flex-col gap-3">
-                        {items.map((item) => (
+                        {visibleItems.map((item) => (
                             <div key={item.id} className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-4 flex items-center justify-between gap-4">
                                 <div className="flex flex-col">
                                     <span className="font-semibold text-base text-gray-900 dark:text-zinc-50">{item.name}</span>
@@ -317,6 +379,7 @@ export default function InventoryCountPage() {
                             </div>
                         ))}
                     </div>
+                    )}
 
                     {addItemToggle}
 

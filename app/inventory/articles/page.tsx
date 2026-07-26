@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { IoArrowBack, IoAddCircleOutline, IoReorderThree } from "react-icons/io5";
+import { IoArrowBack, IoAddCircleOutline, IoReorderThree, IoPencilOutline, IoTrashOutline } from "react-icons/io5";
 import { useAuth } from "../../lib/services/auth/auth-context";
 import { itemsService } from "../../lib/services/items/items.service";
 import { isLow } from "../../lib/services/items/low-stock";
@@ -174,12 +174,17 @@ export default function ArticlesPage() {
                     <p className="text-sm text-gray-500 dark:text-zinc-400">Drag the handle to arrange items in the order you want to count them.</p>
                     {items.map((item) => {
                         const isEditing = editingId === item.id;
+                        const low = isLow(item);
                         return (
                             <div
                                 key={item.id}
                                 ref={setItemRef(item.id)}
                                 style={dragStyle(item.id)}
-                                className="bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl p-5 flex flex-col gap-3"
+                                className={`bg-gray-100 dark:bg-zinc-800 border-y border-r rounded-2xl p-4 flex flex-col gap-3 border-l-4 ${
+                                    low
+                                        ? "border-orange-300 dark:border-orange-800 border-l-orange-400 dark:border-l-orange-500"
+                                        : "border-gray-200 dark:border-zinc-700 border-l-transparent"
+                                }`}
                             >
                                 {isEditing && edit ? (
                                     <>
@@ -256,7 +261,7 @@ export default function ArticlesPage() {
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
                                         <button
                                             onPointerDown={(e) => onPointerDown(e, item.id)}
                                             onPointerMove={onPointerMove}
@@ -264,27 +269,53 @@ export default function ArticlesPage() {
                                             onPointerCancel={onPointerUp}
                                             aria-label="Drag to reorder"
                                             style={{ touchAction: "none", cursor: draggedId === item.id ? "grabbing" : "grab" }}
-                                            className="text-gray-400 dark:text-zinc-500 p-2 -m-2"
+                                            className="shrink-0 text-gray-500 dark:text-zinc-400 p-2 rounded-lg bg-gray-200/70 dark:bg-zinc-700/60"
                                         >
                                             <IoReorderThree className="text-xl" />
                                         </button>
-                                        <div className="flex flex-col flex-1">
-                                            <span className="font-semibold text-base text-gray-900 dark:text-zinc-50">
-                                                {item.name}
-                                                {isLow(item) && (
-                                                    <span className="ml-2 text-xs font-semibold text-orange-600 dark:text-orange-400">low</span>
+
+                                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <span className="font-semibold text-base text-gray-900 dark:text-zinc-50 truncate">
+                                                    {item.name}
+                                                </span>
+                                                {low && (
+                                                    <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-400 bg-orange-100 dark:bg-orange-950 rounded-full px-2 py-0.5">
+                                                        Low
+                                                    </span>
                                                 )}
-                                            </span>
-                                            <span className="text-sm text-gray-600 dark:text-zinc-400">
-                                                {item.category ?? "Uncategorized"} · {item.quantity} {item.unit} (min {item.min_stock})
-                                            </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                {item.category && (
+                                                    <span className="text-xs font-medium text-gray-600 dark:text-zinc-300 bg-gray-200 dark:bg-zinc-700 rounded-full px-2 py-0.5">
+                                                        {item.category}
+                                                    </span>
+                                                )}
+                                                <span className="text-sm text-gray-700 dark:text-zinc-300">
+                                                    {item.quantity} {item.unit}
+                                                </span>
+                                                {item.min_stock > 0 && (
+                                                    <span className="text-xs text-gray-400 dark:text-zinc-500">
+                                                        min {item.min_stock}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-4 text-sm font-semibold">
-                                            <button onClick={() => startEdit(item)} className="text-blue-600 dark:text-blue-400">
-                                                Edit
+
+                                        <div className="flex items-center shrink-0">
+                                            <button
+                                                onClick={() => startEdit(item)}
+                                                aria-label="Edit"
+                                                className="p-2 rounded-lg text-gray-500 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700 hover:text-blue-600 dark:hover:text-blue-400"
+                                            >
+                                                <IoPencilOutline className="text-lg" />
                                             </button>
-                                            <button onClick={() => deleteItem(item)} className="text-red-600 dark:text-red-400">
-                                                Delete
+                                            <button
+                                                onClick={() => deleteItem(item)}
+                                                aria-label="Delete"
+                                                className="p-2 rounded-lg text-gray-500 dark:text-zinc-400 hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400"
+                                            >
+                                                <IoTrashOutline className="text-lg" />
                                             </button>
                                         </div>
                                     </div>
